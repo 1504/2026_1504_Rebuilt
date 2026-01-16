@@ -11,3 +11,7 @@ import commands2
 from commands2 import Subsystem, Command
 
 import constants
+
+class ClimbSubsystem(Subsystem):
+    def __init__(self):
+        super().__init__()

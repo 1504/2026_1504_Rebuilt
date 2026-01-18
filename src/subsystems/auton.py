@@ -8,9 +8,9 @@ import wpimath.units
 import ntcore
 import navx
 
-import swervemodule
-import constants
-import swerveutils
+import src.constants.swervemodule as swervemodule
+import src.constants.constants as constants
+import src.constants.swerveutils as swerveutils
 
 import commands2
 from commands2 import Command

@@ -1,11 +1,11 @@
 import wpilib
 import wpimath
 import navx
-import drivesubsystem
+import src.subsystems.drivesubsystem as drivesubsystem
 import commands2
-import climb
-import intake
-import constants
+import src.subsystems.climb as climb
+import src.subsystems.intake as intake
+import src.constants.constants as constants
 import wpilib.drive
 import wpimath.filter
 import wpimath.controller

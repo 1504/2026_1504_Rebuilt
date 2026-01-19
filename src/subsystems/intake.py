@@ -5,7 +5,7 @@ import commands2
 from commands2 import Subsystem, Command
 from rev import SparkMax, SparkMaxConfig, SparkBase
 import math
-import src.robotcontainer as robotcontainer
+import src.constants as constants
 
 class IntakeSubsystem(Subsystem):
     def __init__(self):

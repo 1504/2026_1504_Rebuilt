@@ -8,9 +8,9 @@ import wpimath.units
 import ntcore
 import navx
 
-import src.constants.swervemodule as swervemodule
-import src.robotcontainer as robotcontainer
-import src.constants.swerveutils as swerveutils
+import src.swerve.swervemodule as swervemodule
+import src.constants as constants
+import src.swerve.swerveutils as swerveutils
 
 from commands2 import Command
 # import networklogger
@@ -21,35 +21,35 @@ class DriveSubsystem:
     """
     def __init__(self) -> None:
         self.kDriveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(
-            wpimath.geometry.Translation2d(robotcontainer.kWheelBase / 2, robotcontainer.kTrackWidth / 2),
-            wpimath.geometry.Translation2d(robotcontainer.kWheelBase / 2, -robotcontainer.kTrackWidth / 2),
-            wpimath.geometry.Translation2d(-robotcontainer.kWheelBase / 2, robotcontainer.kTrackWidth / 2),
-            wpimath.geometry.Translation2d(-robotcontainer.kWheelBase / 2, -robotcontainer.kTrackWidth / 2),
+            wpimath.geometry.Translation2d(constants.kWheelBase / 2, constants.kTrackWidth / 2),
+            wpimath.geometry.Translation2d(constants.kWheelBase / 2, -constants.kTrackWidth / 2),
+            wpimath.geometry.Translation2d(-constants.kWheelBase / 2, constants.kTrackWidth / 2),
+            wpimath.geometry.Translation2d(-constants.kWheelBase / 2, -constants.kTrackWidth / 2),
         )
 
         self.front_left = swervemodule.SwerveModule(
-            robotcontainer.kFrontLeftDrivingCanId, 
-            robotcontainer.kFrontLeftTurningCanId,
-            robotcontainer.kFrontLeftChassisAngularOffset,
-            robotcontainer.kFrontLeftAbsoluteEncoderOffset
+            constants.kFrontLeftDrivingCanId, 
+            constants.kFrontLeftTurningCanId,
+            constants.kFrontLeftChassisAngularOffset,
+            constants.kFrontLeftAbsoluteEncoderOffset
         )
         self.rear_left = swervemodule.SwerveModule(
-            robotcontainer.kRearLeftDrivingCanId,
-            robotcontainer.kRearLeftTurningCanId,
-            robotcontainer.kRearLeftChassisAngularOffset,
-            robotcontainer.kRearLeftAbsoluteEncoderOffset
+            constants.kRearLeftDrivingCanId,
+            constants.kRearLeftTurningCanId,
+            constants.kRearLeftChassisAngularOffset,
+            constants.kRearLeftAbsoluteEncoderOffset
         )
         self.front_right = swervemodule.SwerveModule(
-            robotcontainer.kFrontRightDrivingCanId,
-            robotcontainer.kFrontRightTurningCanId,
-            robotcontainer.kFrontRightChassisAngularOffset,
-            robotcontainer.kFrontRightAbsoluteEncoderOffset
+            constants.kFrontRightDrivingCanId,
+            constants.kFrontRightTurningCanId,
+            constants.kFrontRightChassisAngularOffset,
+            constants.kFrontRightAbsoluteEncoderOffset
         )
         self.rear_right = swervemodule.SwerveModule(
-            robotcontainer.kRearRightDrivingCanId,
-            robotcontainer.kRearRightTurningCanId,
-            robotcontainer.kRearRightChassisAngularOffset,
-            robotcontainer.kRearRightAbsoluteEncoderOffset
+            constants.kRearRightDrivingCanId,
+            constants.kRearRightTurningCanId,
+            constants.kRearRightChassisAngularOffset,
+            constants.kRearRightAbsoluteEncoderOffset
         )
 
         # the gyro sensor
@@ -60,8 +60,8 @@ class DriveSubsystem:
         self.current_translation_dir = 0.0
         self.current_translation_mag = 0.0
 
-        self.mag_limiter = wpimath.filter.SlewRateLimiter(robotcontainer.kMagnitudeSlewRate / 1)
-        self.rot_limiter = wpimath.filter.SlewRateLimiter(robotcontainer.kRotationalSlewRate / 1)
+        self.mag_limiter = wpimath.filter.SlewRateLimiter(constants.kMagnitudeSlewRate / 1)
+        self.rot_limiter = wpimath.filter.SlewRateLimiter(constants.kRotationalSlewRate / 1)
 
         self.prev_time = ntcore._now() * pow(1, -6) # secodns
 
@@ -121,7 +121,7 @@ class DriveSubsystem:
             # Calculate the direction slew rate based on an estimate of lateral acceleration
             direction_slew_rate = None
             if self.current_translation_mag != 0.0:
-                direction_slew_rate = abs(robotcontainer.kDirectionSlewRate / self.current_translation_mag)
+                direction_slew_rate = abs(constants.kDirectionSlewRate / self.current_translation_mag)
             else:
                 direction_slew_rate = 500.0 # some high number that means the slew rate is effectively instantaneous
             
@@ -153,9 +153,9 @@ class DriveSubsystem:
             self.current_rotation = rot
         
         # Convert the commanded speeds into correct units for the drivetrain
-        x_speedDelivered = x_speed_commanded * robotcontainer.kMaxSpeed
-        y_speedDelivered = y_speed_commanded * robotcontainer.kMaxSpeed
-        rotDelivered = self.current_rotation * robotcontainer.kMaxAngularSpeed
+        x_speedDelivered = x_speed_commanded * constants.kMaxSpeed
+        y_speedDelivered = y_speed_commanded * constants.kMaxSpeed
+        rotDelivered = self.current_rotation * constants.kMaxAngularSpeed
 
         (fl, fr, bl, br) = self.kDriveKinematics.toSwerveModuleStates(
             wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -180,7 +180,7 @@ class DriveSubsystem:
         self.rear_right.set_desired_state(wpimath.kinematics.SwerveModuleState(0, wpimath.geometry.Rotation2d(wpimath.units.degreesToRadians(45))))
 
     def setModuleStates(self, desiredStates: tuple[wpimath.kinematics.SwerveModuleState]) -> None:
-        self.kDriveKinematics.desaturateWheelSpeeds(desiredStates, robotcontainer.kMaxSpeed)
+        self.kDriveKinematics.desaturateWheelSpeeds(desiredStates, constants.kMaxSpeed)
 
         self.front_left.set_desired_state(desiredStates[0])
         self.front_right.set_desired_state(desiredStates[1])

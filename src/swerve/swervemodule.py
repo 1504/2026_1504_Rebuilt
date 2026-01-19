@@ -6,7 +6,7 @@ import wpimath.controller
 import wpimath.trajectory
 import rev
 from rev import SparkMax, SparkMaxConfig, SparkBase
-import src.robotcontainer as robotcontainer
+import src.constants as constants
 
 kWheelRadius = 0.0508
 kEncoderResolution = 4096

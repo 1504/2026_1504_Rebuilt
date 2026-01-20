@@ -62,8 +62,8 @@ class SwerveModule:
         self.driving_pid_controller = self.driving_spark_max.getClosedLoopController()
         self.turning_pid_controller = self.turning_spark_max.getClosedLoopController()
 
-        self.driving_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
-        self.turning_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+        self.driving_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kPrimaryEncoder)
+        self.turning_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kAbsoluteEncoder)
 
 
         # Enable PID wrap around for the turning motor. This will allow the PID

@@ -75,7 +75,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
-        # # Changing settings on Limelight
+        #  Changing settings on Limelight
 
         # self.pipelineLimelightPub = self.limelightTable.getDoubleTopic("pipeline").publish() # via limelightTable to limelight
 
@@ -83,62 +83,62 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # self.streamLimelightPub = self.limelightTable.getDoubleTopic("stream").publish()
 
-        # self.coreTable = self.coreTableInstance.getTable("datatable")
+        #  self.coreTable = self.coreTableInstance.getTable("datatable")
 
 
-        # General subscribing and publishing setup
+        # # General subscribing and publishing setup
 
-        # Generic part 1 code for declaring a telemetry publishing ( this declaration is placed in robotInit)
+        # # Generic part 1 code for declaring a telemetry publishing ( this declaration is placed in robotInit)
 
-        # self.xxxPub = self.coreTable.getDoubleTopic("xxx").publish()
+        # # self.xxxPub = self.coreTable.getDoubleTopic("xxx").publish()
 
-        # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
-
-
-        self.txPub = self.coreTable.getDoubleTopic("tx").publish() # via coreTable to shuffleboard
-
-        self.tyPub = self.coreTable.getDoubleTopic("ty").publish()
-
-        self.taPub = self.coreTable.getDoubleTopic("ta").publish()
-
-        self.tvPub = self.coreTable.getDoubleTopic("tv").publish()
-
-        self.tidPub = self.coreTable.getDoubleTopic("tid").publish()
-
-        self.pipelinePub = self.coreTable.getDoubleTopic("pipeline").publish()
+        # # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
 
 
+        ## self.txPub = self.coreTable.getDoubleTopic("tx").publish() # via coreTable to shuffleboard
 
-        # Publishing elements form dataArray
+        ## self.tyPub = self.coreTable.getDoubleTopic("ty").publish()
 
-        self.txFromDataArrayPub = self.coreTable.getDoubleTopic("txFromDataArray").publish()
+        ## self.taPub = self.coreTable.getDoubleTopic("ta").publish()
 
-        self.tzFromDataArrayPub = self.coreTable.getDoubleTopic("tzFromDataArray").publish()
+        ## self.tvPub = self.coreTable.getDoubleTopic("tv").publish()
 
-        self.RyFromDataArrayPub = self.coreTable.getDoubleTopic("RyFromDataArray").publish()
+        ## self.tidPub = self.coreTable.getDoubleTopic("tid").publish()
 
-        self.targetDistancePub = self.coreTable.getDoubleTopic("targetDistance").publish()
+        ## self.pipelinePub = self.coreTable.getDoubleTopic("pipeline").publish()
 
 
 
-        # Drive system telemetry
+        # # Publishing elements form dataArray
 
-        self.driveFR_EncPub = self.coreTable.getDoubleTopic("driveFR_Enc").publish()
+        ## self.txFromDataArrayPub = self.coreTable.getDoubleTopic("txFromDataArray").publish()
 
-        self.driveFL_EncPub = self.coreTable.getDoubleTopic("driveFL_Enc").publish()
+        ## self.tzFromDataArrayPub = self.coreTable.getDoubleTopic("tzFromDataArray").publish()
 
-        self.driveBL_EncPub = self.coreTable.getDoubleTopic("driveBL_Enc").publish()
+        ## self.RyFromDataArrayPub = self.coreTable.getDoubleTopic("RyFromDataArray").publish()
 
-        self.driveBR_EncPub = self.coreTable.getDoubleTopic("driveBR_Enc").publish()
+        ## self.targetDistancePub = self.coreTable.getDoubleTopic("targetDistance").publish()
 
 
-        self.rotationFR_EncPub = self.coreTable.getDoubleTopic("rotationFR_Enc").publish()
 
-        self.rotationFL_EncPub = self.coreTable.getDoubleTopic("rotationFL_Enc").publish()
+        # # Drive system telemetry
 
-        self.rotationBR_EncPub = self.coreTable.getDoubleTopic("rotationBR_Enc").publish()
+        ## self.driveFR_EncPub = self.coreTable.getDoubleTopic("driveFR_Enc").publish()
 
-        self.rotationBL_EncPub = self.coreTable.getDoubleTopic("rotationBL_Enc").publish()
+        ## self.driveFL_EncPub = self.coreTable.getDoubleTopic("driveFL_Enc").publish()
+
+        ## self.driveBL_EncPub = self.coreTable.getDoubleTopic("driveBL_Enc").publish()
+
+        ## self.driveBR_EncPub = self.coreTable.getDoubleTopic("driveBR_Enc").publish()
+
+
+        ## self.rotationFR_EncPub = self.coreTable.getDoubleTopic("rotationFR_Enc").publish()
+
+        ## self.rotationFL_EncPub = self.coreTable.getDoubleTopic("rotationFL_Enc").publish()
+
+        ## self.rotationBR_EncPub = self.coreTable.getDoubleTopic("rotationBR_Enc").publish()
+
+        ## self.rotationBL_EncPub = self.coreTable.getDoubleTopic("rotationBL_Enc").publish()
 
 
 

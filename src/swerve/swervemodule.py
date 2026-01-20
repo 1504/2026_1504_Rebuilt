@@ -62,8 +62,8 @@ class SwerveModule:
         self.driving_pid_controller = self.driving_spark_max.getClosedLoopController()
         self.turning_pid_controller = self.turning_spark_max.getClosedLoopController()
 
-        self.driving_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kPrimaryEncoder)
-        self.turning_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kAbsoluteEncoder)
+        ## self.driving_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kPrimaryEncoder)
+        ## self.turning_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.setFeedbackSensor.kAbsoluteEncoder)
 
 
         # Enable PID wrap around for the turning motor. This will allow the PID
@@ -102,12 +102,12 @@ class SwerveModule:
         # self.driving_spark_max.burnFlash()
         # self.turning_spark_max.burnFlash()
 
-        self.driving_spark_max.configure(self.driving_config,
-                                          SparkBase.ResetMode.kResetSafeParameters,
-                                          SparkBase.PersistMode.kPersistParameters)
-        self.turning_spark_max.configure(self.turning_config,
-                                         SparkBase.ResetMode.kResetSafeParameters,
-                                         SparkBase.PersistMode.kPersistParameters)
+        ## self.driving_spark_max.configure(self.driving_config,
+        ##                                   SparkBase.ResetMode.kResetSafeParameters,
+        ##                                   SparkBase.PersistMode.kPersistParameters)
+        ## self.turning_spark_max.configure(self.turning_config,
+        ##                                  SparkBase.ResetMode.kResetSafeParameters,
+        ##                                  SparkBase.PersistMode.kPersistParameters)
 
         # Swerve drive parameters
         self.chassis_angular_offset = chassis_angular_offset

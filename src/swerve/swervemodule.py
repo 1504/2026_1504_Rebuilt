@@ -24,12 +24,12 @@ class SwerveModule:
         """
 
         """ Initialize Spark Max motor controllers"""
-        self.driving_spark_max: SparkMax = SparkMax(driveMotorChannel, SparkMax.MotorType.kBrushless)
-        self.turning_spark_max: SparkMax = SparkMax(turningMotorChannel, SparkMax.MotorType.kBrushless)
+        self.driving_spark_max: SparkMax = rev.SparkMax(driveMotorChannel, SparkMax.MotorType.kBrushless)
+        self.turning_spark_max: SparkMax = rev.SparkMax(turningMotorChannel, SparkMax.MotorType.kBrushless)
 
         """ Create Config Variables """ 
-        self.driving_config = SparkMaxConfig()
-        self.turning_config = SparkMaxConfig()
+        self.driving_config = rev.SparkMaxConfig()
+        self.turning_config = rev.SparkMaxConfig()
 
         """ Initialize Spark Max encoders"""
         # Get Encoder Objects from Spark Max

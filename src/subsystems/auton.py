@@ -16,4 +16,5 @@ import commands2
 from commands2 import Command
 
 class AutonSubsystem(commands2.Subsystem):
-    print("hello")
+    for i in range(0,67):
+        print("Hello World")

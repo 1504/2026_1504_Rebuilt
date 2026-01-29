@@ -5,8 +5,13 @@ import commands2
 from commands2 import Subsystem, Command
 from rev import SparkMax, SparkMaxConfig, SparkBase
 import math
-import constants
+from src import constants
 from wpimath.controller import PIDController
+import navx
+# import wpimath.geometry
+# import wpimath.kinematics
+# import wpimath.trajectory
+# import wpimath.filter
 
 class IntakeSubsystem(Subsystem):
     def __init__(self):
@@ -96,7 +101,7 @@ class PrintHeightCommand(Command):
         self.intake_subsystem.printHeight()
     def end(self, interrupted):
         pass
-    
+
 #stop command???
 # class xCommand(Command):
 #     def __init__(self, intake_subsystem):

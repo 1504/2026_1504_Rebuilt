@@ -3,8 +3,8 @@ import wpimath
 import wpilib.drive
 import wpimath.filter
 import wpimath.controller
-import navx
-import src.subsystems.drivesubsystem as drivesubsystem
+# import navx
+# import src.subsystems.drivesubsystem as drivesubsystem
 import commands2
 import src.subsystems.climb as climb
 import src.constants as constants
@@ -18,10 +18,11 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 class MyRobot(commands2.TimedCommandRobot):
+    
     def robotInit(self) -> None:
         self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
-        self.swerve = drivesubsystem.DriveSubsystem()
+        # self.swerve = drivesubsystem.DriveSubsystem()
         self.climb_subsystem = climb.ClimbSubsystem()
         self.intake_subsystem = intake.IntakeSubsystem()
         
@@ -160,6 +161,7 @@ class MyRobot(commands2.TimedCommandRobot):
     
 
     def teleopPeriodic(self) -> None:
+        pass
         # Teleop periodic logic
         if self.driver_controller.getLeftTriggerAxis() > 0.1: 
             self.slowdwj(False)
@@ -208,9 +210,10 @@ class MyRobot(commands2.TimedCommandRobot):
         )
 
 
-        self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
+        # self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
 
     def slowdwj(self, field_relative: bool) -> None:
+        pass
         x_speed = (
             -self.x_speed_limiter.calculate(
                 wpimath.applyDeadband(self.driver_controller.getLeftY(), 0.08)
@@ -233,7 +236,7 @@ class MyRobot(commands2.TimedCommandRobot):
         )
 
 
-        self.swerve.drive(x_speed, y_speed, rot,field_relative, rate_limit=True)
+        # self.swerve.drive(x_speed, y_speed, rot,field_relative, rate_limit=True)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

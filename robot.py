@@ -11,6 +11,7 @@ import src.constants as constants
 import src.subsystems.intake as intake
 from wpilib import Timer
 import ntcore
+import limelight
 
 # To see messages from networktables:
 import logging
@@ -24,6 +25,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.swerve = drivesubsystem.DriveSubsystem()
         self.climb_subsystem = climb.ClimbSubsystem()
         self.intake_subsystem = intake.IntakeSubsystem()
+
+        from subsystems.LimelightCamera import LimelightCamera
+        self.camera = LimelightCamera("limelight")  # name of your camera goes in parentheses
         
         self.x_speed_limiter = wpimath.filter.SlewRateLimiter(3)
         self.y_speed_limiter = wpimath.filter.SlewRateLimiter(3)

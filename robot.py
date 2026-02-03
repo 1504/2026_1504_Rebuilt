@@ -31,9 +31,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # climb bindings
         #self.gadget_controller.a().whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
-        # self.gadget_controller.y().whileTrue(climb.ClimbL4Command(self.climb_subsystem))
-        # self.gadget_controller.x().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
-        # self.gadget_controller.b().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
+        # self.gadget_controller.y().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
+        # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
+        # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() < -0.5).whileTrue(climb.ClimbUpCommand(self.climb_subsystem))
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() > 0.5).whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
 

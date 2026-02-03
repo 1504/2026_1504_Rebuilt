@@ -30,4 +30,4 @@ components  = [
 ]
 
 # Other pip packages to install
-requires = ["pynetworktables", "pynetconsole"]
+requires = ["pynetworktables", "pynetconsole", "robotpy-navx", "robotpy-rev"]

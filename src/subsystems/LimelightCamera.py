@@ -36,6 +36,7 @@ class LimelightCamera(Subsystem):
     def setPipeline(self, index: int):
         self.pipelineIndexRequest.set(float(index))
 
+
     def getPipeline(self) -> int:
         return int(self.pipelineIndex.get(-1))
 

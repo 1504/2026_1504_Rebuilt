@@ -15,7 +15,7 @@ import constants
 
 import time
 
-import src.robotcontainer as robotcontainer
+import src.constants as constants
 
 class Climbing(Subsystem):
     def __init__(self):
@@ -43,7 +43,7 @@ class Climbing(Subsystem):
          self.climbingMotor1.set(0.1)
          self.climbingMotor2.set(0.1)
 
-    def pullDown(self):
+    def pushDown(self):
         self.climbingMotor1.set(-0.03)
         self.climbingMotor2.set(-0.03)
 
@@ -114,3 +114,43 @@ class printHeightCommand(Command):
 
     def end(self, interrupted):
         self.climbing_subsystem.stop()
+
+class pullUpClimbCommand(Command):
+    def __init__(self, climb_subsystem):
+        super().__init__()
+
+        self.climb_subsystem = climb_subsystem
+
+    def initialize(self):
+        self.climb_subsystem.pullup()
+        self.start_time = time.time()
+        self.inTime = time.time() + 1.37
+
+    def execute(self):
+        pass
+
+    def isFinished(self):
+        return time.time() > self.inTime
+
+    def end(self, interrupted):
+        self.climb_subsystem.stop()
+
+class pushDownClimbCommand(Command):
+    def __init__(self, climb_subsystem):
+        super().__init__()
+
+        self.climb_subsystem = climb_subsystem
+
+    def initialize(self):
+        self.climb_subsystem.pushdown()
+        self.start_time = time.time()
+        self.inTime = time.time() + 1.37
+
+    def execute(self):
+        pass
+
+    def isFinished(self):
+        return time.time() > self.inTime
+
+    def end(self, interrupted):
+        self.climb_subsystem.stop()

@@ -8,9 +8,9 @@ import wpimath.units
 import ntcore
 import navx
 
-import src.constants.swervemodule as swervemodule
-import src.robotcontainer as robotcontainer
-import src.constants.swerveutils as swerveutils
+import src.swerve.swervemodule as swervemodule
+import src.constants as robotcontainer
+import src.swerve.swerveutils as swerveutils
 
 from commands2 import Command
 # import networklogger

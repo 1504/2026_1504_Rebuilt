@@ -7,7 +7,7 @@ import navx
 import src.subsystems.drivesubsystem as drivesubsystem
 import commands2
 import src.subsystems.climb as climb
-import src.constants as constants
+import subsystems.constants as constants
 import src.subsystems.intake as intake
 from wpilib import Timer
 import ntcore

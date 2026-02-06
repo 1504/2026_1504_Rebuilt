@@ -9,7 +9,7 @@ import ntcore
 import navx
 
 import src.swerve.swervemodule as swervemodule
-import src.constants as constants
+import subsystems.constants as constants
 import src.swerve.swerveutils as swerveutils
 
 from commands2 import Command

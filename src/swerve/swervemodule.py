@@ -6,7 +6,7 @@ import wpimath.controller
 import wpimath.trajectory
 import rev
 from rev import SparkMax, SparkMaxConfig, SparkBase
-import src.constants
+import subsystems.constants
 
 kWheelRadius = 0.0508
 kEncoderResolution = 4096
@@ -40,20 +40,20 @@ class SwerveModule:
 
         # Apply position and velocity conversion factors for the driving encoder.
         # We want these in radians and radians per second to use with WPILibs swerve APIs
-        self.driving_config.encoder.positionConversionFactor(src.constants.kDrivingEncoderPositionFactor)
-        self.driving_config.encoder.velocityConversionFactor(src.constants.kDrivingEncoderVelocityFactor)
+        self.driving_config.encoder.positionConversionFactor(subsystems.constants.kDrivingEncoderPositionFactor)
+        self.driving_config.encoder.velocityConversionFactor(subsystems.constants.kDrivingEncoderVelocityFactor)
 
         # Apply position and velocity conversion factors for the turning encoder.
         # We want these in radians and radians per second to use with WPILibs swerve APIs
-        self.turning_config.absoluteEncoder.positionConversionFactor(src.constants.kTurningEncoderPositionFactor)
-        self.turning_config.absoluteEncoder.velocityConversionFactor(src.constants.kTurningEncoderVelocityFactor)
+        self.turning_config.absoluteEncoder.positionConversionFactor(subsystems.constants.kTurningEncoderPositionFactor)
+        self.turning_config.absoluteEncoder.velocityConversionFactor(subsystems.constants.kTurningEncoderVelocityFactor)
         self.turning_config.absoluteEncoder.zeroOffset(absolute_encoder_offset)
 
         # Invert the turning encoder, since the output shaft rotates in the opposite
         # direction of the steering motor in the MAXSwerve Module.
         # self.turningEncoder.setInverted(src.constants.kTurningEncoderInverted)
         # self.turning_config.encoder(src.constants.kTurningEncoderInverted)
-        self.turning_config.absoluteEncoder.inverted(src.constants.kTurningEncoderInverted)
+        self.turning_config.absoluteEncoder.inverted(subsystems.constants.kTurningEncoderInverted)
 
         """ Initialize PID Controllers"""
         # create spark max pid controllers
@@ -71,31 +71,31 @@ class SwerveModule:
         # degrees to 10 degrees will go through 0 rather than the other direction
         #  which is a longer route.
         self.turning_config.closedLoop.positionWrappingEnabled(True)
-        self.turning_config.closedLoop.positionWrappingMinInput(src.constants.kTurningEncoderPositionPIDMinInput)
-        self.turning_config.closedLoop.positionWrappingMaxInput(src.constants.kTurningEncoderPositionPIDMaxInput)
+        self.turning_config.closedLoop.positionWrappingMinInput(subsystems.constants.kTurningEncoderPositionPIDMinInput)
+        self.turning_config.closedLoop.positionWrappingMaxInput(subsystems.constants.kTurningEncoderPositionPIDMaxInput)
 
 
         # Set the PID gains for the driving motor. Note these are example gains, and
         # you may need to tune them for your own robot!
-        self.driving_config.closedLoop.P(src.constants.kDrivingP)
-        self.driving_config.closedLoop.I(src.constants.kDrivingI)
-        self.driving_config.closedLoop.D(src.constants.kDrivingD)
-        self.driving_config.closedLoop.velocityFF(src.constants.kDrivingFF)
-        self.driving_config.closedLoop.outputRange(src.constants.kDrivingMinOutput, src.constants.kDrivingMaxOutput)
+        self.driving_config.closedLoop.P(subsystems.constants.kDrivingP)
+        self.driving_config.closedLoop.I(subsystems.constants.kDrivingI)
+        self.driving_config.closedLoop.D(subsystems.constants.kDrivingD)
+        self.driving_config.closedLoop.velocityFF(subsystems.constants.kDrivingFF)
+        self.driving_config.closedLoop.outputRange(subsystems.constants.kDrivingMinOutput, subsystems.constants.kDrivingMaxOutput)
 
         # Set the PID gains for the turning motor. Note these are example gains, and
         # you may need to tune them for your own robot!
-        self.turning_config.closedLoop.P(src.constants.kTurningP)
-        self.turning_config.closedLoop.I(src.constants.kTurningI)
-        self.turning_config.closedLoop.D(src.constants.kTurningD)
-        self.turning_config.closedLoop.velocityFF(src.constants.kTurningFF)
-        self.turning_config.closedLoop.outputRange(src.constants.kTurningMinOutput, src.constants.kTurningMaxOutput)
+        self.turning_config.closedLoop.P(subsystems.constants.kTurningP)
+        self.turning_config.closedLoop.I(subsystems.constants.kTurningI)
+        self.turning_config.closedLoop.D(subsystems.constants.kTurningD)
+        self.turning_config.closedLoop.velocityFF(subsystems.constants.kTurningFF)
+        self.turning_config.closedLoop.outputRange(subsystems.constants.kTurningMinOutput, subsystems.constants.kTurningMaxOutput)
 
         """ Spark Max Mode Parameters"""
-        self.driving_config.setIdleMode(src.constants.kDrivingMotorIdleMode)
-        self.turning_config.setIdleMode(src.constants.kTurningMotorIdleMode)
-        self.driving_config.smartCurrentLimit(src.constants.kDrivingMotorCurrentLimit)
-        self.turning_config.smartCurrentLimit(src.constants.kTurningMotorCurrentLimit)
+        self.driving_config.setIdleMode(subsystems.constants.kDrivingMotorIdleMode)
+        self.turning_config.setIdleMode(subsystems.constants.kTurningMotorIdleMode)
+        self.driving_config.smartCurrentLimit(subsystems.constants.kDrivingMotorCurrentLimit)
+        self.turning_config.smartCurrentLimit(subsystems.constants.kTurningMotorCurrentLimit)
 
         # Save the SPARK MAX configurations. If a SPARK MAX browns out during
         # operation, it will maintain the above configurations

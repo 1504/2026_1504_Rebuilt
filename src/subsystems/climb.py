@@ -10,7 +10,7 @@ from rev import SparkMax, SparkMaxConfig, SparkBase
 import commands2
 from commands2 import Subsystem, Command
 
-import subsystems.constants as constants
+import src.constants as constants
 
 class ClimbSubsystem(Subsystem):
     def __init__(self):

@@ -31,9 +31,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # climb bindings
         #self.gadget_controller.a().whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
-        # self.gadget_controller.y().whileTrue(climb.ClimbL4Command(self.climb_subsystem))
-        # self.gadget_controller.x().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
-        # self.gadget_controller.b().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
+        # self.gadget_controller.y().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
+        # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
+        # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() < -0.5).whileTrue(climb.ClimbUpCommand(self.climb_subsystem))
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() > 0.5).whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
 
@@ -75,7 +75,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
-        # # Changing settings on Limelight
+        #  Changing settings on Limelight
 
         # self.pipelineLimelightPub = self.limelightTable.getDoubleTopic("pipeline").publish() # via limelightTable to limelight
 
@@ -83,62 +83,20 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # self.streamLimelightPub = self.limelightTable.getDoubleTopic("stream").publish()
 
-        # self.coreTable = self.coreTableInstance.getTable("datatable")
+        #  self.coreTable = self.coreTableInstance.getTable("datatable")
 
 
-        # General subscribing and publishing setup
+        # # General subscribing and publishing setup
 
-        # Generic part 1 code for declaring a telemetry publishing ( this declaration is placed in robotInit)
+        # # Generic part 1 code for declaring a telemetry publishing ( this declaration is placed in robotInit)
 
-        # self.xxxPub = self.coreTable.getDoubleTopic("xxx").publish()
+        # # self.xxxPub = self.coreTable.getDoubleTopic("xxx").publish()
 
-        # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
-
-
-        self.txPub = self.coreTable.getDoubleTopic("tx").publish() # via coreTable to shuffleboard
-
-        self.tyPub = self.coreTable.getDoubleTopic("ty").publish()
-
-        self.taPub = self.coreTable.getDoubleTopic("ta").publish()
-
-        self.tvPub = self.coreTable.getDoubleTopic("tv").publish()
-
-        self.tidPub = self.coreTable.getDoubleTopic("tid").publish()
-
-        self.pipelinePub = self.coreTable.getDoubleTopic("pipeline").publish()
+        # # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
 
 
 
-        # Publishing elements form dataArray
-
-        self.txFromDataArrayPub = self.coreTable.getDoubleTopic("txFromDataArray").publish()
-
-        self.tzFromDataArrayPub = self.coreTable.getDoubleTopic("tzFromDataArray").publish()
-
-        self.RyFromDataArrayPub = self.coreTable.getDoubleTopic("RyFromDataArray").publish()
-
-        self.targetDistancePub = self.coreTable.getDoubleTopic("targetDistance").publish()
-
-
-
-        # Drive system telemetry
-
-        self.driveFR_EncPub = self.coreTable.getDoubleTopic("driveFR_Enc").publish()
-
-        self.driveFL_EncPub = self.coreTable.getDoubleTopic("driveFL_Enc").publish()
-
-        self.driveBL_EncPub = self.coreTable.getDoubleTopic("driveBL_Enc").publish()
-
-        self.driveBR_EncPub = self.coreTable.getDoubleTopic("driveBR_Enc").publish()
-
-
-        self.rotationFR_EncPub = self.coreTable.getDoubleTopic("rotationFR_Enc").publish()
-
-        self.rotationFL_EncPub = self.coreTable.getDoubleTopic("rotationFL_Enc").publish()
-
-        self.rotationBR_EncPub = self.coreTable.getDoubleTopic("rotationBR_Enc").publish()
-
-        self.rotationBL_EncPub = self.coreTable.getDoubleTopic("rotationBL_Enc").publish()
+        # # Drive system telemetry
 
 
 

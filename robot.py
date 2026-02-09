@@ -141,7 +141,6 @@ class MyRobot(commands2.TimedCommandRobot):
         else:
             self.driveWithJoystick(True)
         x = self.camera.getX()
-
         print(f"x={x}")
         
     
@@ -174,7 +173,7 @@ class MyRobot(commands2.TimedCommandRobot):
         # the right by default.
         rot = (
             -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
+                wpimath.applyDeadband(self.camera.getX(), 0.08)
             )
             # * drivesubsystem.kMaxSpeed
         )

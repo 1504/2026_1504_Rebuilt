@@ -3,11 +3,7 @@ import rev
 import wpilib
 import wpimath.trajectory
 from rev import SparkMax, SparkMaxConfig, SparkFlex, SparkFlexConfig, SparkBase
-    def __init__(self) -> None:
-        # The robot's subsystems
-        from subsystems.limelight_camera import LimelightCamera
-        self.camera = LimelightCamera("limelight")  # name of your camera goes in parentheses
-        
+
 """ DRIVE CONSTANTS """
 # Driving parameters - Note that these are not the maximum capable speeds of
 # the robot, rather the allowed maximum speeds

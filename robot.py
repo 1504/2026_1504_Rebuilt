@@ -26,6 +26,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.climb_subsystem = climb.ClimbSubsystem()
         self.intake_subsystem = intake.IntakeSubsystem()
 
+
+        
+
+
+
         
         self.camera = LimelightCamera("limelight")  # name of your camera goes in parentheses
         
@@ -131,7 +136,9 @@ class MyRobot(commands2.TimedCommandRobot):
     def teleopPeriodic(self) -> None:
         # Teleop periodic logic
         if self.driver_controller.getLeftTriggerAxis() > 0.1: 
-            self.slowdwj(False)
+            self.turn_to_object ()
+
+        
         elif self.driver_controller.getRightTriggerAxis() > 0.1:
             self.slowdwj(False)
         elif self.driver_controller.rightBumper(True):
@@ -180,6 +187,11 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
+
+    def turn_to_object(self) -> None:
+        self.swerve.drive(0,0,self.camera.getX(*-0.5), false,rate_limit=True)
+
+
 
     def slowdwj(self, field_relative: bool) -> None:
         x_speed = (

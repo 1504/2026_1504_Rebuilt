@@ -198,7 +198,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         rot = (
             -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
+                wpimath.applyDeadband(self.camera.getX()* -0.5, 0.08)
             )
              * 0.2
         )

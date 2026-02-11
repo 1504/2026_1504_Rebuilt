@@ -5,7 +5,7 @@ import commands2
 from commands2 import Subsystem, Command
 from rev import SparkMax, SparkMaxConfig, SparkBase
 import math
-import constants
+from src.constants import constants
 class ShootSubsystem(Subsystem):
     def __init__(self):
         super().__init__()
@@ -20,7 +20,7 @@ class ShootSubsystem(Subsystem):
 
         #conveyorDetector.whileActiveContinuous(new RunMotor());
         #self.motors = wpilib.MotorControllerGroup(self.leftMotor, self.rightMotor)
-def shoot(self)
+def shoot(self):
     #button press and go
         self.leftMotor.set(-0.2)
         self.rightMotor.set(0.2)

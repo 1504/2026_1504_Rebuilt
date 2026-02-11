@@ -11,6 +11,7 @@ import src.constants as constants
 import src.subsystems.intake as intake
 from wpilib import Timer
 import ntcore
+from src.subsystems.LimelightCamera import LimelightCamera
 
 # To see messages from networktables:
 import logging
@@ -24,6 +25,14 @@ class MyRobot(commands2.TimedCommandRobot):
         self.swerve = drivesubsystem.DriveSubsystem()
         self.climb_subsystem = climb.ClimbSubsystem()
         self.intake_subsystem = intake.IntakeSubsystem()
+
+
+        
+
+
+
+        
+        self.camera = LimelightCamera("limelight")  # name of your camera goes in parentheses
         
         self.x_speed_limiter = wpimath.filter.SlewRateLimiter(3)
         self.y_speed_limiter = wpimath.filter.SlewRateLimiter(3)
@@ -126,16 +135,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self) -> None:
         # Teleop periodic logic
-        if self.driver_controller.getLeftTriggerAxis() > 0.1: 
-            self.slowdwj(False)
-        elif self.driver_controller.getRightTriggerAxis() > 0.1:
-            self.slowdwj(False)
-        elif self.driver_controller.rightBumper(True):
-            self.slowdwj(False)
-        elif self.driver_controller.leftBumper(True):
-            self.slowdwj(False)
-        else:
-            self.driveWithJoystick(True)
+        self.turn_to_object ()
+        x = self.camera.getX()
+        print(f"x={x}")
         
     
     def testPeriodic(self) -> None:
@@ -167,13 +169,18 @@ class MyRobot(commands2.TimedCommandRobot):
         # the right by default.
         rot = (
             -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
+                wpimath.applyDeadband(self.driver_controller.getRightX(),0.08)
             )
             # * drivesubsystem.kMaxSpeed
         )
 
 
         self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
+
+    def turn_to_object(self) -> None:
+        self.swerve.drive(0,0,self.camera.getX() * 0.05, False,rate_limit=True)
+
+
 
     def slowdwj(self, field_relative: bool) -> None:
         x_speed = (
@@ -192,7 +199,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         rot = (
             -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
+                wpimath.applyDeadband(self.camera.getX()* -0.5, 0.08)
             )
              * 0.2
         )

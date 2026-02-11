@@ -125,7 +125,7 @@ class pullUpClimbCommand(Command):
     def initialize(self):
         self.climb_subsystem.pullup()
         self.start_time = time.time()
-        self.inTime = time.time() + 1.37
+        self.inTime = time.time() + 0.20
 
     def execute(self):
         pass
@@ -145,7 +145,7 @@ class pushDownClimbCommand(Command):
     def initialize(self):
         self.climb_subsystem.pushdown()
         self.start_time = time.time()
-        self.inTime = time.time() + 1.37
+        self.inTime = time.time() + 0.20
 
     def execute(self):
         pass

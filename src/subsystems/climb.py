@@ -12,7 +12,7 @@ from commands2 import Subsystem, Command
 
 import src.constants as constants
 
-import constants
+import src.constants
 
 import time
 
@@ -22,8 +22,8 @@ class Climbing(Subsystem):
     def __init__(self):
         super().__init__()
         self.climbingOffset=1
-        self.climbingMotor1: SparkMax = SparkMax(6, SparkMax.MotorType.kBrushless)
-        self.climbingMotor2: SparkMax = SparkMax(7, SparkMax.MotorType.kBrushless)
+        self.climbingMotor1: SparkMax = SparkMax(16, SparkMax.MotorType.kBrushless)
+        self.climbingMotor2: SparkMax = SparkMax(17, SparkMax.MotorType.kBrushless)
 
 
         self.climbingEncoder1 = self.climbingMotor1.getEncoder()

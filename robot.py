@@ -22,7 +22,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
         self.swerve = drivesubsystem.DriveSubsystem()
-        self.climb_subsystem = climb.ClimbSubsystem()
+        self.climb_subsystem = climb.Climbing()
         self.intake_subsystem = intake.IntakeSubsystem()
         
         self.x_speed_limiter = wpimath.filter.SlewRateLimiter(3)
@@ -50,49 +50,12 @@ class MyRobot(commands2.TimedCommandRobot):
         self.coreTableInstance = ntcore.NetworkTableInstance.getDefault()
 
 
-        # Limelight subscribing and publishing setup
-
-        # self.limelightTable = self.coreTableInstance.getTable("limelight") # IP's not work here
-
-
-
-        # self.txLimelightSub = self.limelightTable.getDoubleTopic("tx").subscribe(0.0) # via limelight to limelightTable, for direct on robot retrieval
-
-        # self.tyLimelightSub = self.limelightTable.getDoubleTopic("ty").subscribe(0.0)
-
-        # self.taLimelightSub = self.limelightTable.getDoubleTopic("ta").subscribe(0.0)
-
-        # self.tvLimelightSub = self.limelightTable.getDoubleTopic("tv").subscribe(0)
-
-        # self.tidLimelightSub = self.limelightTable.getDoubleTopic("tid").subscribe(0.0)
 
 
 
 
-        # # dataArray from 3D AprilTag
-
-        # self.dataArrayLimelightSub = self.limelightTable.getDoubleArrayTopic("camerapose_targetspace").subscribe([6])
 
 
-
-        #  Changing settings on Limelight
-
-        # self.pipelineLimelightPub = self.limelightTable.getDoubleTopic("pipeline").publish() # via limelightTable to limelight
-
-        # self.pipelineLimelightPub.set(limelight1_DefaultPipeline) # Default pipeline
-
-        # self.streamLimelightPub = self.limelightTable.getDoubleTopic("stream").publish()
-
-        #  self.coreTable = self.coreTableInstance.getTable("datatable")
-
-
-        # # General subscribing and publishing setup
-
-        # # Generic part 1 code for declaring a telemetry publishing ( this declaration is placed in robotInit)
-
-        # # self.xxxPub = self.coreTable.getDoubleTopic("xxx").publish()
-
-        # # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
 
 
 

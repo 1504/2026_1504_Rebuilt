@@ -179,6 +179,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def turn_to_object(self) -> None:
         self.swerve.drive(0,0,self.camera.getX() * 0.05, False,rate_limit=True)
+        self.swerve.drive(.1,0,0, True,rate_limit=True)
 
 
 

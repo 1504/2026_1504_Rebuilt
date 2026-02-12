@@ -135,18 +135,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self) -> None:
         # Teleop periodic logic
-        if self.driver_controller.getLeftTriggerAxis() > 0.1: 
-            self.turn_to_object ()
-
-        
-        elif self.driver_controller.getRightTriggerAxis() > 0.1:
-            self.slowdwj(False)
-        elif self.driver_controller.rightBumper(True):
-            self.slowdwj(False)
-        elif self.driver_controller.leftBumper(True):
-            self.slowdwj(False)
-        else:
-            self.driveWithJoystick(True)
+        self.turn_to_object ()
         x = self.camera.getX()
         print(f"x={x}")
         
@@ -180,7 +169,7 @@ class MyRobot(commands2.TimedCommandRobot):
         # the right by default.
         rot = (
             -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.camera.getX(), 0.08)
+                wpimath.applyDeadband(self.driver_controller.getRightX(),0.08)
             )
             # * drivesubsystem.kMaxSpeed
         )
@@ -189,7 +178,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
 
     def turn_to_object(self) -> None:
-        self.swerve.drive(0,0,self.camera.getX(*-0.5), false,rate_limit=True)
+        self.swerve.drive(0,0,self.camera.getX() * 0.05, False,rate_limit=True)
 
 
 

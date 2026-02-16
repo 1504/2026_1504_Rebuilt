@@ -72,7 +72,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         return self.encoder.getPosition()
     
     def printHeight(self):
-        print(self.climbingEncoder1.getPosition())
+        print(self.encoder.getPosition())
 
 
 
@@ -91,6 +91,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         # print(f'setting goal to {self.goal}')
         self.setGoal(self.goal)
         self.at_goal = False
+        message = f'setting new goal {self.goal} between {ElevatorConstants.k_min_height} and {ElevatorConstants.k_max_height}'
 
 
     def move_meters(self, delta_meters: float, silent=False) -> None:  # way to bump up and down for testing
@@ -196,7 +197,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
             print(f'Invalid Elevator move mode: {self.mode}')
 
 
-        print(f"{self.indent * '    '}** Started {self.getName()} with mode {self.mode} and goal {self.goal:.2f} **", flush=True)
+        print(f"{self.indent * '    '}** Started {self.getName()} with mode {self.mode} from {self.elevator.get_height} M and goal {self.goal:.2f} **", flush=True)
 
 
     def execute(self) -> None:

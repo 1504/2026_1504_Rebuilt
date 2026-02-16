@@ -12,6 +12,52 @@ import src.subsystems.intake as intake
 from wpilib import Timer
 import ntcore
 from src.subsystems.LimelightCamera import LimelightCamera
+import math
+
+# --- VISION SUBSYSTEM DEFINITION ---
+class VisionSubsystem:
+    def __init__(self):
+        self.table = ntcore.NetworkTableInstance.getDefault().getTable("limelight")
+        self.tid_sub = self.table.getDoubleTopic("tid").subscribe(-1)
+        self.ty_sub = self.table.getDoubleTopic("ty").subscribe(0.0)
+        
+        # Physical Camera Constants
+        self.CAMERA_HEIGHT = 34.0  # Inches off floor
+        self.CAMERA_PITCH = -22.0  # Degrees (downward)
+
+    def get_tag_height(self, tag_id):
+        """Returns height in inches based on 2026 specs."""
+        # HUB AprilTags
+        if tag_id in [2, 3, 4, 5, 8, 9, 10, 11, 18, 19, 20, 21, 24, 25, 26, 27]:
+            return 44.25
+        # TOWER WALL & OUTPOST AprilTags
+        elif tag_id in [15, 16, 31, 32, 13, 14, 29, 30]:
+            return 21.75
+        # TRENCH AprilTags
+        elif tag_id in [1, 6, 7, 12, 17, 22, 23, 28]:
+            return 35.0
+        return 0.0
+
+    def get_distance_to_tag(self) -> float:
+        tag_id = int(self.tid_sub.get())
+        ty = self.ty_sub.get()
+        target_height = self.get_tag_height(tag_id)
+
+        if target_height == 0 or tag_id == -1:
+            return -1.0 
+
+        angle_to_goal_rad = math.radians(self.CAMERA_PITCH + ty)
+        
+        # Protect against tan(0)
+        denom = math.tan(angle_to_goal_rad)
+        if abs(denom) < 1e-6:
+            return -1.0
+            
+        # d = (h2 - h1) / tan(a1 + a2)
+        distance = (target_height - self.CAMERA_HEIGHT) / denom
+        return abs(distance)
+
+# --- ORIGINAL ROBOT CODE (UNMODIFIED) ---
 
 # To see messages from networktables:
 import logging
@@ -26,11 +72,10 @@ class MyRobot(commands2.TimedCommandRobot):
         self.climb_subsystem = climb.ClimbSubsystem()
         self.intake_subsystem = intake.IntakeSubsystem()
 
-
-        
-
-
-
+        # --- VISION CALLBACK INITIALIZATION ---
+        self.vision = VisionSubsystem()
+        self.vision_log_timer = wpilib.Timer()
+        self.vision_log_timer.start()
         
         self.camera = LimelightCamera("limelight")  # name of your camera goes in parentheses
         
@@ -103,23 +148,22 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
 
-
-
-
-
-
-
-
-
-
         # # Drive system telemetry
-
 
         self.oldX=0
         self.timer = Timer()
 
     def robotPeriodic(self):
         commands2.CommandScheduler.getInstance().run()
+
+        # --- VISION TERMINAL CALLBACK ---
+        if self.vision_log_timer.hasElapsed(0.5):
+            dist = self.vision.get_distance_to_tag()
+            if dist > 0:
+                print(f"[RIO Log] AprilTag Distance: {dist:.2f} inches")
+            else:
+                print("[RIO Log] Searching for Tags...")
+            self.vision_log_timer.reset()
 
     
     def autonomousInit(self) -> None:

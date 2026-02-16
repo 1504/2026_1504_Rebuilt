@@ -178,7 +178,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
-        self.start_time = round(self.container.get_enabled_time(), 2)
+       
 
 
         # a little bit complicated because I want to test everything here
@@ -196,7 +196,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
             print(f'Invalid Elevator move mode: {self.mode}')
 
 
-        print(f"{self.indent * '    '}** Started {self.getName()} with mode {self.mode} and goal {self.goal:.2f} at {self.start_time} s **", flush=True)
+        print(f"{self.indent * '    '}** Started {self.getName()} with mode {self.mode} and goal {self.goal:.2f} **", flush=True)
 
 
     def execute(self) -> None:
@@ -213,11 +213,11 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
 
     def end(self, interrupted: bool) -> None:
-        end_time = self.container.get_enabled_time()
+        
         end_message = 'Interrupted' if interrupted else 'Ended'
         print_end_message = True
         end_location = self.elevator.get_height()
-        msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {end_location:.3f}m after {end_time - self.start_time:.1f} s **"
+        msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {end_location:.3f}m  **"
         if print_end_message:
             print(msg)
 

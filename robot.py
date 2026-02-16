@@ -30,10 +30,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.rot_limiter = wpimath.filter.SlewRateLimiter(3)
 
         # climb bindings
-        self.gadget_controller.a().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(20),use_dash=False,offset=0))
-        self.gadget_controller.b().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(10),use_dash=False,offset=0))
+        self.gadget_controller.a().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(20),use_dash=False,offset=0,wait_to_finish=True))
+        self.gadget_controller.b().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(10),use_dash=False,offset=0,wait_to_finish=True))
         
-        # self.gadget_controller.y().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
+        self.gadget_controller.y().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(-10),use_dash=False,offset=0,wait_to_finish=True))
+        
         # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
         # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() < -0.5).whileTrue(climb.ClimbUpCommand(self.climb_subsystem))

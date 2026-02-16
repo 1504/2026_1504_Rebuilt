@@ -138,15 +138,15 @@ class ElevatorConstants:
     k_mass_kg = lbsToKilograms(19)
     k_plant = DCMotor.NEO(2)
 
-    k_min_height = inchesToMeters(8)
+    k_min_height = inchesToMeters(-20)
     k_max_height = inchesToMeters(30)
     k_tolerance = 2 / 100 # 2 cm
 
     k_sim_starting_height = 2
 
     k_config = SparkMaxConfig()
-    k_config.voltageCompensation(12)
-    k_config.inverted(True)
+    k_config.voltageCompensation(12)            
+    k_config.inverted(False)
 
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)

@@ -11,7 +11,7 @@ import src.constants as constants
 import src.subsystems.intake as intake
 from wpilib import Timer
 import ntcore
-
+from wpimath.units import inchesToMeters, lbsToKilograms
 # To see messages from networktables:
 import logging
 
@@ -30,7 +30,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.rot_limiter = wpimath.filter.SlewRateLimiter(3)
 
         # climb bindings
-        #self.gadget_controller.a().whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
+        self.gadget_controller.a().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(20),use_dash=False,offset=0))
+        self.gadget_controller.b().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(10),use_dash=False,offset=0))
+        
         # self.gadget_controller.y().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
         # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
         # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))
@@ -47,7 +49,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # NetworkTable initialization
 
-        self.coreTableInstance = ntcore.NetworkTableInstance.getDefault()
+        
 
 
 

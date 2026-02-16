@@ -37,13 +37,6 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.follower = rev.SparkMax(ElevatorConstants.k_follower_CAN_id, rev.SparkMax.MotorType.kBrushless)
         self.sparks = [self.climbingMotor1, self.follower]
 
-        self.rev_resets = rev.SparkMax.ResetMode.kResetSafeParameters
-        self.rev_persists = rev.SparkMax.PersistMode.kPersistParam
-
-        controller_revlib_error_source = self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
-        controller_revlib_error_follower = self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
-        print(f"Reconfigured elevator sparkmaxes. Controller status: \n {controller_revlib_error_source}\n {controller_revlib_error_follower}")
-
         self.controller = self.climbingMotor1.getClosedLoopController()
 
         self.encoder = self.climbingMotor1.getEncoder()
@@ -158,15 +151,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
             self.error = self.position - self.goal
 
 
-            if ElevatorConstants.k_nt_debugging:  # add additional info to NT for debugging
-                wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
-                wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', self.error)
-                wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', self.goal)
-                # wpilib.SmartDashboard.putNumber(f'{self.getName()}_curr_sp',) not sure how to ask for this - controller won't give it
-                wpilib.SmartDashboard.putNumber(f'{self.getName()}_output', self.motor.getAppliedOutput())
             self.is_moving = abs(self.encoder.getVelocity()) > 0.001  # m per second
-            wpilib.SmartDashboard.putBoolean(f'{self.getName()}_is_moving', self.is_moving)
-            wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_pos', self.position * 1000)  #  make it mm
 
 class MoveElevator(commands2.Command):  # change the name for your command
 

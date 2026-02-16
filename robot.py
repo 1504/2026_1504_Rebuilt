@@ -32,7 +32,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.rot_limiter = wpimath.filter.SlewRateLimiter(3)
 
         # climb bindings
-        self.gadget_controller.a().whileTrue(shoot.basicAhhShoot(self.shoot_subsystem))
+        self.gadget_controller.a().whileTrue(shoot.AllShoot(self.shoot_subsystem))
+        self.gadget_controller.x().whileTrue(shoot.Feed(self.shoot_subsystem))
+        self.gadget_controller.y().whileTrue(shoot.Shoot(self.shoot_subsystem))
         # self.gadget_controller.y().whileTrue(climb.ClimbL3Command(self.climb_subsystem))
         # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
         # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))

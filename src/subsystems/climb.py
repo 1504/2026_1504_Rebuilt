@@ -1,29 +1,39 @@
+import commands2
+import wpimath.controller
+import wpimath.trajectory
+import rev
 import wpilib
-from wpilib import TimedRobot, Joystick
-
-from wpimath.controller import PIDController
+from wpimath.units import inchesToMeters
 import math
 
-import rev
-from rev import SparkMax, SparkMaxConfig, SparkBase
+import constants
+from constants import ElevatorConstants
 
-import commands2
-from commands2 import Subsystem, Command
-
-import src.constants as constants
-
-import src.constants
-
-import time
-
-import src.constants as constants
-
-class Climbing(Subsystem):
+class Elevator(commands2.TrapezoidProfileSubsystem):
     def __init__(self):
-        super().__init__()
-        self.climbingOffset=1
-        self.climbingMotor1: SparkMax = SparkMax(16, SparkMax.MotorType.kBrushless)
-        self.climbingMotor2: SparkMax = SparkMax(17, SparkMax.MotorType.kBrushless)
+        super().__init__(
+            constraints=wpimath.trajectory.TrapezoidProfile.Constraints(
+                ElevatorConstants.k_max_velocity_meter_per_second,
+                ElevatorConstants.k_max_acceleration_meter_per_sec_squared
+            ),
+            initial_position=ElevatorConstants.k_min_height,
+            period=0.02,
+        )
+        self.feedforward = wpimath.controller.ElevatorFeedforward(
+            kS=ElevatorConstants.k_kS_volts,
+            kG=ElevatorConstants.k_kG_volts,
+            kV=ElevatorConstants.k_kV_volt_second_per_radian,
+            kA=ElevatorConstants.k_kA_volt_second_squared_per_meter,
+            dt=0.02)
+        
+
+        self.counter = ElevatorConstants.k_counter_offset
+        self.tolerance = 0.03  # meters - then we will be "at goal"
+        self.goal = ElevatorConstants.k_min_height
+        self.at_goal = True
+
+        self.climbingMotor1 = rev.SparkMax((9, rev.SparkMax.MotorType.kBrushless))
+        self.follower = rev.SparkMax(10, rev.SparkMax.MotorType.kBrushless)
 
 
         self.climbingEncoder1 = self.climbingMotor1.getEncoder()

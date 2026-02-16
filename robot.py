@@ -22,7 +22,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
         self.swerve = drivesubsystem.DriveSubsystem()
-        self.climb_subsystem = climb.Climbing()
+        self.climb_subsystem = climb.Elevator()
         self.intake_subsystem = intake.IntakeSubsystem()
         
         self.x_speed_limiter = wpimath.filter.SlewRateLimiter(3)

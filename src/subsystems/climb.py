@@ -5,7 +5,7 @@ import rev
 import wpilib
 from wpimath.units import inchesToMeters
 import math
-
+import time
 import constants
 from constants import ElevatorConstants
 
@@ -37,7 +37,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
 
 
         self.climbingEncoder1 = self.climbingMotor1.getEncoder()
-        self.climbingEncoder2 = self.climbingMotor2.getEncoder()
+        self.climbingEncoder2 = self.follower.getEncoder()
 
         self.climbingEncoder1.setPosition(0)
         self.climbingEncoder2.setPosition(0)
@@ -45,22 +45,22 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.pidController2 = PIDController(0.0,0.0,0.0)
     def stop(self):
         self.climbingMotor1.set(0.0)
-        self.climbingMotor2.set(0.0)
+        self.follower.set(0.0)
 
     def printHeight(self):
         print(self.climbingEncoder1.getPosition())
 
     def pullup(self):
          self.climbingMotor1.set(0.1)
-         self.climbingMotor2.set(0.1)
+         self.follower.set(0.1)
 
     def pushDown(self):
         self.climbingMotor1.set(-0.03)
-        self.climbingMotor2.set(-0.03)
+        self.follower.set(-0.03)
 
     def PullUpManual(self):
         self.climbingMotor1.set(-0.10)
-        self.climbingMotor2.set(-0.10)
+        self.follower.set(-0.10)
 
     def defaultPos(self):
         #while self.elevatorEncoder2.getPosition() > constants.kDefaultPosRotation:
@@ -77,7 +77,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.climbingMotor1.set((-1*self.pidController1.calculate(20+self.climbingOffset, self.climbingEncoder1.getPosition()))*0.5)
     def l3(self):
         self.climbingMotor1.set((-1*self.pidController1.calculate(30+self.climbingOffset, self.climbingEncoder1.getPosition()))*0.5)
-class ClimbingPullUpManualCommand(Command):
+class ClimbingPullUpManualCommand(commands2.Command):
     def __init__(self, climbing_subsystem):
         super().__init__()
 
@@ -93,7 +93,7 @@ class ClimbingPullUpManualCommand(Command):
     def end(self, interrupted):
         self.climbing_subsystem.stop()
 
-class ClimbingPullUpCommand(Command):
+class ClimbingPullUpCommand(commands2.Command):
     def __init__(self, climbing_subsystem):
         super().__init__()
 
@@ -109,7 +109,7 @@ class ClimbingPullUpCommand(Command):
     def end(self, interrupted):
         self.climbing_subsystem.stop()
 
-class printHeightCommand(Command):
+class printHeightCommand(commands2.Command):
     def __init__(self, climbing_subsystem):
         super().__init__()
 
@@ -126,7 +126,7 @@ class printHeightCommand(Command):
     def end(self, interrupted):
         self.climbing_subsystem.stop()
 
-class pullUpClimbCommand(Command):
+class pullUpClimbCommand(commands2.Command):
     def __init__(self, climb_subsystem):
         super().__init__()
 
@@ -146,7 +146,7 @@ class pullUpClimbCommand(Command):
     def end(self, interrupted):
         self.climb_subsystem.stop()
 
-class pushDownClimbCommand(Command):
+class pushDownClimbCommand(commands2.Command):
     def __init__(self, climb_subsystem):
         super().__init__()
 

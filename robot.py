@@ -19,6 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 class MyRobot(commands2.TimedCommandRobot):
     def robotInit(self) -> None:
+        self.counter = 0
         self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
         self.swerve = drivesubsystem.DriveSubsystem()
@@ -46,30 +47,6 @@ class MyRobot(commands2.TimedCommandRobot):
         # self.gadget_controller.rightBumper().whileTrue(intake.slowForwardCoralCommand(self.intake_subsystem))#slow corel
         # self.gadget_controller.rightTrigger().whileTrue(intake.fastForwardCoralCommand(self.intake_subsystem))#fast coral
 
-        ## Core Functions
-
-        # NetworkTable initialization
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # # Drive system telemetry
 
 
 
@@ -91,17 +68,24 @@ class MyRobot(commands2.TimedCommandRobot):
     
 
     def teleopPeriodic(self) -> None:
+        self.counter+= 1
+
+        if self.counter % 10 == 0:
+            message = 'setting {self.climb_subsystem.getName()} at  {self.climb_subsystem.get_height:.2f}'
+            print(message)
+
+        
         # Teleop periodic logic
-        if self.driver_controller.getLeftTriggerAxis() > 0.1: 
-            self.slowdwj(False)
-        elif self.driver_controller.getRightTriggerAxis() > 0.1:
-            self.slowdwj(False)
-        elif self.driver_controller.rightBumper(True):
-            self.slowdwj(False)
-        elif self.driver_controller.leftBumper(True):
-            self.slowdwj(False)
-        else:
-            self.driveWithJoystick(True)
+        # if self.driver_controller.getLeftTriggerAxis() > 0.1: 
+        #     self.slowdwj(False)
+        # elif self.driver_controller.getRightTriggerAxis() > 0.1:
+        #     self.slowdwj(False)
+        # elif self.driver_controller.rightBumper(True):
+        #     self.slowdwj(False)
+        # elif self.driver_controller.leftBumper(True):
+        #     self.slowdwj(False)
+        # else:
+        #     self.driveWithJoystick(True)
         
     
     def testPeriodic(self) -> None:

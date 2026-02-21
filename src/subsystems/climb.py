@@ -27,7 +27,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
             kA=ElevatorConstants.k_kA_volt_second_squared_per_meter,
             dt=0.02)
         
-
+        self.setName(ElevatorConstants.k_name)
         self.counter = ElevatorConstants.k_counter_offset
         self.tolerance = 0.03  # meters - then we will be "at goal"
         self.goal = ElevatorConstants.k_min_height
@@ -37,10 +37,22 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.follower = rev.SparkMax(ElevatorConstants.k_follower_CAN_id, rev.SparkMax.MotorType.kBrushless)
         self.sparks = [self.climbingMotor1, self.follower]
 
+        
+        ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+        ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+        
+        rev_resets = rev.ResetMode.kResetSafeParameters  
+                                          
+        rev_persists = rev.PersistMode.kPersistParameters
+
+        self.climbingMotor1.configure(ElevatorConstants.k_config, rev_resets, rev_persists)
+        self.follower.configure(ElevatorConstants.k_follower_config, rev_resets, rev_persists)       
+
         self.controller = self.climbingMotor1.getClosedLoopController()
 
         self.encoder = self.climbingMotor1.getEncoder()
-
+        self.encoder2 = self.follower.getEncoder()
+        self.encoder.setPosition(self.goal)
         self.enable()
 
     def useState(self, setpoint: wpimath.trajectory.TrapezoidProfile.State) -> None:
@@ -54,34 +66,17 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.controller.setReference(setpoint.position, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0, arbFeedforward=feedforward)
         # self.goal = setpoint.position  # don't want this - unless we want to plot the trapezoid
 
-    def set_brake_mode(self, mode='brake'):
-        if mode == 'brake':
-            ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
-            ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
-        else:
-            ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
-            ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
 
-        # do not make the changes permanent
-        rev_resets = rev.SparkMax.ResetMode.kNoResetSafeParameters
-        rev_persists = rev.SparkMax.PersistMode.kNoPersistParameters
-        self.climbingMotor1.configure(ElevatorConstants.k_config, rev_resets, rev_persists)
-        self.follower.configure(ElevatorConstants.k_follower_config, rev_resets, rev_persists)
     
-    def get_height(self):
+    def get_height(self) -> float:
         return self.encoder.getPosition()
     
     def printHeight(self):
         print(self.encoder.getPosition())
+        message = f'kanID 9: {self.encoder.getPosition} kanID 10: {self.encoder2.getPosition}'
+        print(message)
 
 
-
-    def defaultPos(self):
-        #while self.elevatorEncoder2.getPosition() > constants.kDefaultPosRotation:
-           # self.elevatorMotor1.set(-constants.kDefaultPosSpeed)
-           # self.elevatorMotor2.set
-        self.climbingEncoder1.setPosition(0)
-        self.climbingEncoder2.setPosition(0)
 
     def set_goal(self, goal):
         # make our own sanity-check on the subsystem's setGoal function
@@ -92,7 +87,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.setGoal(self.goal)
         self.at_goal = False
         message = f'setting new goal {self.goal} between {ElevatorConstants.k_min_height} and {ElevatorConstants.k_max_height}'
-
+        print(message)
 
     def move_meters(self, delta_meters: float, silent=False) -> None:  # way to bump up and down for testing
         current_position = self.get_height()
@@ -157,11 +152,10 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
 class MoveElevator(commands2.Command):  # change the name for your command
 
 
-    def __init__(self, container, elevator: Elevator, mode='scoring', height=inchesToMeters(8), use_dash=True, offset=0, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, elevator: Elevator, mode='scoring', height=inchesToMeters(8), use_dash=True, offset=0, wait_to_finish=False, indent=0) -> None:
         super().__init__()
         self.setName('Move Elevator')  # change this to something appropriate for this command
         self.indent = indent
-        self.container = container
         self.elevator = elevator
         self.mode = mode
         self.height = height
@@ -183,15 +177,9 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
 
         # a little bit complicated because I want to test everything here
-        if self.mode == 'scoring':  # what will eventually be the norm
-            self.goal = self.container.robot_state.get_elevator_goal() + self.offset
-            self.elevator.set_goal(self.goal)
-        elif self.mode == 'specified':  # send to a specific height
+        if self.mode == 'specified':  # send to a specific height
             self.goal = self.height
             self.elevator.set_goal(self.goal)
-        elif self.mode == 'incremental':  # call from GUI to increment up and down
-            self.goal = self.height  # height is a delta in this case
-            self.elevator.move_meters(delta_meters=self.goal)
 
         else:
             print(f'Invalid Elevator move mode: {self.mode}')
@@ -243,10 +231,10 @@ class ClimbingPullUpManualCommand(commands2.Command):
         self.climbing_subsystem.stop()
 
 class ClimbingPullUpCommand(commands2.Command):
-    def __init__(self, climbing_subsystem):
+    def __init__(self, elevator: Elevator):
         super().__init__()
 
-        self.climbing_subsystem = climbing_subsystem
+        self.climbing_subsystem = elevator
         
     #stopped here
     def initialize(self):
@@ -267,13 +255,15 @@ class printHeightCommand(commands2.Command):
         
      #stopped here
     def initialize(self):
-        pass
-
-    def execute(self):
         self.climbing_subsystem.printHeight()
 
+    def execute(self):
+        pass
+
+    def isFinished(self):
+        True
     def end(self, interrupted):
-        self.climbing_subsystem.stop()
+        pass
 
 class pullUpClimbCommand(commands2.Command):
     def __init__(self, climb_subsystem):

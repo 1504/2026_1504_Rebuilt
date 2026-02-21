@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 class MyRobot(commands2.TimedCommandRobot):
     def robotInit(self) -> None:
         self.counter = 0
-        self.driver_controller = commands2.button.CommandXboxController(0)
+        #self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
         self.swerve = drivesubsystem.DriveSubsystem()
         self.climb_subsystem = climb.Elevator()
@@ -31,10 +31,10 @@ class MyRobot(commands2.TimedCommandRobot):
         self.rot_limiter = wpimath.filter.SlewRateLimiter(3)
 
         # climb bindings
-        self.gadget_controller.a().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(20),use_dash=False,offset=0,wait_to_finish=True))
-        self.gadget_controller.b().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(10),use_dash=False,offset=0,wait_to_finish=True))
-        
-        self.gadget_controller.y().onTrue(climb.MoveElevator(self,self.climb_subsystem,mode='specified',height=inchesToMeters(-10),use_dash=False,offset=0,wait_to_finish=True))
+        self.gadget_controller.a().onTrue(climb.MoveElevator(self.climb_subsystem,mode='specified',height= -1,use_dash=False,offset=0,wait_to_finish=True))
+        self.gadget_controller.b().onTrue(climb.MoveElevator(self.climb_subsystem,mode='specified',height= -8,use_dash=False,offset=0,wait_to_finish=True))
+        self.gadget_controller.x().whileTrue(climb.printHeightCommand(self.climb_subsystem))
+        self.gadget_controller.y().onTrue(climb.MoveElevator(self.climb_subsystem,mode='specified',height= -15,use_dash=False,offset=0,wait_to_finish=True))
         
         # self.gadget_controller.x().whileTrue(climb.ClimbL2Command(self.climb_subsystem))
         # self.gadget_controller.b().whileTrue(climb.ClimbL1Command(self.climb_subsystem))
@@ -68,13 +68,7 @@ class MyRobot(commands2.TimedCommandRobot):
     
 
     def teleopPeriodic(self) -> None:
-        self.counter+= 1
-
-        if self.counter % 10 == 0:
-            message = 'setting {self.climb_subsystem.getName()} at  {self.climb_subsystem.get_height:.2f}'
-            print(message)
-
-        
+        pass
         # Teleop periodic logic
         # if self.driver_controller.getLeftTriggerAxis() > 0.1: 
         #     self.slowdwj(False)

@@ -123,7 +123,7 @@ class ElevatorConstants:
   
     k_CAN_id = 9
     k_follower_CAN_id = 10
-
+    k_name = 'Main Elevator'
     k_max_velocity_meter_per_second = 2
     k_max_acceleration_meter_per_sec_squared = 5
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
@@ -138,8 +138,8 @@ class ElevatorConstants:
     k_mass_kg = lbsToKilograms(19)
     k_plant = DCMotor.NEO(2)
 
-    k_min_height = inchesToMeters(-20)
-    k_max_height = inchesToMeters(30)
+    k_min_height = 0
+    k_max_height = 18
     k_tolerance = 2 / 100 # 2 cm
 
     k_sim_starting_height = 2
@@ -167,7 +167,7 @@ class ElevatorConstants:
     k_config.smartCurrentLimit(40)
 
     k_follower_config = SparkMaxConfig()
-    k_follower_config.follow(k_CAN_id, invert=True)
+    k_follower_config.follow(k_CAN_id, invert=False)
     k_follower_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
     kL1RotationDistance = 1.0 #unit is # rotations of the motor

@@ -78,16 +78,16 @@ class ShootSubsystem(Subsystem):
         
         # PID Configuration (Slot 0)
         # IMPORTANT: Tune these values
-        config.slot0.k_p = 0.05  # Start with this, tune up or down
+        config.slot0.k_p = 0.1  # Start with this, tune up or down
         config.slot0.k_i = 0.0   # Usually not needed for velocity
         config.slot0.k_d = 0.0   # Add if needed for stability
-        config.slot0.k_v = 0.12  # Feedforward - critical for consistency!
-        config.slot0.k_s = 0.01  # Static friction compensation
+        config.slot0.k_v = 0.0  # Feedforward - critical for consistency!
+        config.slot0.k_s = 0.0  # Static friction compensation
         
         # Current limits for safety
-        config.current_limits.supply_current_limit = 10
+        config.current_limits.supply_current_limit = 70
         config.current_limits.supply_current_limit_enable = True
-        config.current_limits.stator_current_limit = 20
+        config.current_limits.stator_current_limit = 50
         config.current_limits.stator_current_limit_enable = True
         
         # Motor output settings
@@ -214,7 +214,7 @@ class ShootSubsystem(Subsystem):
         
         
 class ShootCommand(Command):
-    def __init__(self, shoot_subsystem, target_velocity: float=0.5):
+    def __init__(self, shoot_subsystem, target_velocity: float=42):
         """
         Command to shoot at a specific velocity
         

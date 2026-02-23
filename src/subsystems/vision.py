@@ -1,7 +1,6 @@
 import wpilib
 import ntcore
 import math
-import json
 from commands2 import Subsystem
 
 class VisionSubsystem(Subsystem):
@@ -10,63 +9,63 @@ class VisionSubsystem(Subsystem):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.limelight_table = self.inst.getTable("limelight")
         
-        # 1. Botpose subscriber
+        # Subscribers
         self.botpose_sub = self.limelight_table.getDoubleArrayTopic("botpose_wpiblue").subscribe([0]*11)
+
+        # --- PHYSICAL CONSTANTS (Verified for your setup) ---
+        self.LENS_HEIGHT = 36.25      # Carpet to lens center
+        self.TARGET_HEIGHT = 44.25    # Carpet to AprilTag center
+        self.MOUNT_ANGLE_DEG = 10.0   # Tilted UP 10 degrees
+        self.LENS_TO_BUMPER = 13.5    # Lens distance from front bumper
         
-        # 2. JSON subscriber for multi-tag distances
-        self.json_sub = self.limelight_table.getStringTopic("json").subscribe("")
+        self.height_diff = self.TARGET_HEIGHT - self.LENS_HEIGHT # 8.0"
 
     def get_field_pose(self):
-        """Returns (x, y) in meters."""
+        """Returns (x, y) in meters for Robot.py"""
         pose = self.botpose_sub.get()
-        # If tv (target valid) is 1, we return the pose
         if self.limelight_table.getNumber("tv", 0) > 0 and len(pose) >= 2:
             return pose[0], pose[1]
         return None
 
-    def get_all_tag_distances(self):
-        """Parses the JSON dump to find every tag's 3D distance."""
-        distances = {}
-        json_string = self.json_sub.get()
+    def get_distance_to_tag(self):
+        """Calculates Bumper-to-Tag distance using Inverted Trig."""
+        tv = self.limelight_table.getNumber("tv", 0)
+        if tv < 1.0:
+            return -1.0
+
+        ty = self.limelight_table.getNumber("ty", 0.0)
         
-        if not json_string or json_string == "":
-            return distances
-
-        try:
-            data = json.loads(json_string)
-            # Traverse Limelight JSON: Results -> Fiducial
-            if "Results" in data and data["Results"] is not None:
-                results = data["Results"]
-                if "Fiducial" in results:
-                    for tag in results["Fiducial"]:
-                        tag_id = int(tag.get("fID", -1))
-                        # 't6c_ts' is the Camera-Space transform array
-                        transform = tag.get("t6c_ts", None)
-                        
-                        if transform and len(transform) >= 3:
-                            # Z-distance (index 2) is the distance from lens to tag
-                            z_meters = transform[2]
-                            distances[tag_id] = z_meters * 39.3701
-        except Exception as e:
-            # If there's a parse error, we return what we have (or empty)
-            pass
+        # --- THE CALCULATION ---
+        # Switch to subtraction because 10 + ty was producing 14 inches.
+        # This accounts for the Limelight's coordinate system relative to a 10 deg tilt.
+        total_angle_deg = self.MOUNT_ANGLE_DEG - ty 
+        
+        # Prevent math errors (Tan of 0 or negative)
+        if total_angle_deg < 0.5:
+            total_angle_deg = 0.5
             
-        return distances
+        total_angle_rad = math.radians(total_angle_deg)
+        
+        try:
+            distance_lens = self.height_diff / math.tan(total_angle_rad)
+            distance_bumper = distance_lens - self.LENS_TO_BUMPER
+            return distance_bumper
+        except:
+            return -1.0
 
-    def get_distance_to_tag(self) -> float:
-        """Helper for the simple log in Robot.py"""
-        tags = self.get_all_tag_distances()
-        if tags:
-            return list(tags.values())[0]
-        return -1.0
+    def get_all_tag_distances(self):
+        """Helper for existing Robot.py loops."""
+        dist_bumper = self.get_distance_to_tag()
+        if dist_bumper > 0:
+            # We add LENS_TO_BUMPER back here because Robot.py's 
+            # print statement manually subtracts 13.5 again.
+            return {int(self.limelight_table.getNumber("tid", 0)): dist_bumper + self.LENS_TO_BUMPER}
+        return {}
 
     def periodic(self):
-        # Update Dashboard for easy viewing
-        pose = self.get_field_pose()
-        if pose:
-            wpilib.SmartDashboard.putNumber("Vision/Field_X_In", pose[0] * 39.37)
-            wpilib.SmartDashboard.putNumber("Vision/Field_Y_In", pose[1] * 39.37)
-        
-        tag_dict = self.get_all_tag_distances()
-        for tid, dist in tag_dict.items():
-            wpilib.SmartDashboard.putNumber(f"Vision/Tag_{tid}_Dist", dist)
+        dist = self.get_distance_to_tag()
+        if dist > 0:
+            # This is your main 100.0" display on the dashboard
+            wpilib.SmartDashboard.putNumber("Vision/BumperDist_In", dist)
+        else:
+            wpilib.SmartDashboard.putNumber("Vision/BumperDist_In", 0.0)

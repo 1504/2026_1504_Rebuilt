@@ -114,10 +114,13 @@ class MyRobot(commands2.TimedCommandRobot):
         self.timer = Timer()
 
     def robotPeriodic(self):
-        commands2.CommandScheduler.getInstance().run()
+        try:
+            commands2.CommandScheduler.getInstance().run()
+        except Exception as e:
+            if self.vision_log_timer.hasElapsed(1.0):
+                print(f"Scheduler Error (Check Controllers!): {e}")
 
         # --- UPDATE LIMELIGHT WITH GYRO FOR MEGATAG2 ---
-        # Crucial for stable Field X/Y localization
         robot_yaw = self.swerve.getHeading() 
         self.vision.limelight_table.putNumberArray("robotpose_observation_group", [robot_yaw, 0, 0, 0, 0, 0])
 
@@ -126,13 +129,15 @@ class MyRobot(commands2.TimedCommandRobot):
             # 1. Log Field Coordinates
             field_pose = self.vision.get_field_pose()
             if field_pose:
+                # Convert meters to inches for display
                 print(f"[RIO Log] Field Position: X={field_pose[0]*39.37:.1f}\", Y={field_pose[1]*39.37:.1f}\"")
 
-            # 2. Log All Visible Tag Distances
+            # 2. Log Bumper Distance to all Tags
             tag_distances = self.vision.get_all_tag_distances()
             if tag_distances:
-                dist_str = ", ".join([f"ID {tid}: {dist:.1f}in" for tid, dist in tag_distances.items()])
-                print(f"[RIO Log] Tags in View -> {dist_str}")
+                # Calculate Bumper Distance (Lens Distance - 13.5)
+                dist_str = ", ".join([f"ID {tid}: {dist - self.vision.LENS_TO_BUMPER:.1f}in" for tid, dist in tag_distances.items()])
+                print(f"[RIO Log] Bumper Distances -> {dist_str}")
             else:
                 print("[RIO Log] Searching for Tags...")
             

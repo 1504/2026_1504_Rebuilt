@@ -51,8 +51,8 @@ class SwerveModule:
 
         # Invert the turning encoder, since the output shaft rotates in the opposite
         # direction of the steering motor in the MAXSwerve Module.
-        # self.turningEncoder.setInverted(constants.kTurningEncoderInverted)
-        # self.turning_config.encoder(constants.kTurningEncoderInverted)
+        # self.turningEncoder.setInverted(src.constants.kTurningEncoderInverted)
+        # self.turning_config.encoder(src.constants.kTurningEncoderInverted)
         self.turning_config.absoluteEncoder.inverted(constants.kTurningEncoderInverted)
 
         """ Initialize PID Controllers"""
@@ -61,10 +61,10 @@ class SwerveModule:
         # self.turning_pid_controller: rev.SparkPIDController = self.turning_spark_max.getPIDController()
         self.driving_pid_controller = self.driving_spark_max.getClosedLoopController()
         self.turning_pid_controller = self.turning_spark_max.getClosedLoopController()
-
-        self.driving_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
-        self.turning_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-
+#1
+        self.driving_config.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder)
+        self.turning_config.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
+#1
 
         # Enable PID wrap around for the turning motor. This will allow the PID
         # controller to go through 0 to get to the setpoint i.e. going from 350
@@ -73,8 +73,8 @@ class SwerveModule:
         self.turning_config.closedLoop.positionWrappingEnabled(True)
         self.turning_config.closedLoop.positionWrappingMinInput(constants.kTurningEncoderPositionPIDMinInput)
         self.turning_config.closedLoop.positionWrappingMaxInput(constants.kTurningEncoderPositionPIDMaxInput)
-        
-        
+
+
         # Set the PID gains for the driving motor. Note these are example gains, and
         # you may need to tune them for your own robot!
         self.driving_config.closedLoop.P(constants.kDrivingP)
@@ -101,14 +101,14 @@ class SwerveModule:
         # operation, it will maintain the above configurations
         # self.driving_spark_max.burnFlash()
         # self.turning_spark_max.burnFlash()
-
+#1
         self.driving_spark_max.configure(self.driving_config,
-                                          SparkBase.ResetMode.kResetSafeParameters,
-                                          SparkBase.PersistMode.kPersistParameters)
+                                          rev.ResetMode.kResetSafeParameters,    
+                                          rev.PersistMode.kPersistParameters)
         self.turning_spark_max.configure(self.turning_config,
-                                         SparkBase.ResetMode.kResetSafeParameters,
-                                         SparkBase.PersistMode.kPersistParameters)
-
+                                         rev.ResetMode.kResetSafeParameters,
+                                         rev.PersistMode.kPersistParameters)
+#1
         # Swerve drive parameters
         self.chassis_angular_offset = chassis_angular_offset
         self.desired_state = wpimath.kinematics.SwerveModuleState(0.0, wpimath.geometry.Rotation2d(self.turningEncoder.getPosition())) #diff

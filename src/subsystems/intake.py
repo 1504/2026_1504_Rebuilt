@@ -3,7 +3,7 @@ import wpilib
 from wpilib import TimedRobot, Joystick, DigitalInput,  Timer
 import commands2
 from commands2 import Subsystem, Command
-from rev import SparkMax, SparkMaxConfig, SparkBase
+from rev import SparkMax, SparkMaxConfig, SparkBase, SparkFlex
 import math
 from src import constants
 from wpimath.controller import PIDController
@@ -17,8 +17,8 @@ class IntakeSubsystem(Subsystem):
     def __init__(self):
         super().__init__()
 
-        self.groundIntake: SparkMax = SparkMax(13, SparkMax.MotorType.kBrushless) # change ID later
-        self.jointMotor: SparkMax = SparkMax(14, SparkMax.MotorType.kBrushless)
+        self.groundIntake: SparkFlex = SparkFlex(13, SparkFlex.MotorType.kBrushless) # change ID later
+        self.jointMotor: SparkFlex = SparkFlex(14, SparkFlex.MotorType.kBrushless)
         self.pidIntake = PIDController(0.01, 0, 0) # PID values to be tuned later
         #Increase kP until the system responds quickly and oscillates then cut it in half, (first value)
         #increare kI until offset is corrected in a reasonable time (second value)

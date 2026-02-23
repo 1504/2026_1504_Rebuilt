@@ -95,50 +95,50 @@ class MyRobot(commands2.TimedCommandRobot):
         # self.xxxPub = self.coreTable.getBooleanTopic("xxx").publish()
 
 
-        self.txPub = self.coreTable.getDoubleTopic("tx").publish() # via coreTable to shuffleboard
+        # self.txPub = self.coreTable.getDoubleTopic("tx").publish() # via coreTable to shuffleboard
 
-        self.tyPub = self.coreTable.getDoubleTopic("ty").publish()
+        # self.tyPub = self.coreTable.getDoubleTopic("ty").publish()
 
-        self.taPub = self.coreTable.getDoubleTopic("ta").publish()
+        # self.taPub = self.coreTable.getDoubleTopic("ta").publish()
 
-        self.tvPub = self.coreTable.getDoubleTopic("tv").publish()
+        # self.tvPub = self.coreTable.getDoubleTopic("tv").publish()
 
-        self.tidPub = self.coreTable.getDoubleTopic("tid").publish()
+        # self.tidPub = self.coreTable.getDoubleTopic("tid").publish()
 
-        self.pipelinePub = self.coreTable.getDoubleTopic("pipeline").publish()
-
-
-
-        # Publishing elements form dataArray
-
-        self.txFromDataArrayPub = self.coreTable.getDoubleTopic("txFromDataArray").publish()
-
-        self.tzFromDataArrayPub = self.coreTable.getDoubleTopic("tzFromDataArray").publish()
-
-        self.RyFromDataArrayPub = self.coreTable.getDoubleTopic("RyFromDataArray").publish()
-
-        self.targetDistancePub = self.coreTable.getDoubleTopic("targetDistance").publish()
+        # self.pipelinePub = self.coreTable.getDoubleTopic("pipeline").publish()
 
 
 
-        # Drive system telemetry
+        # # Publishing elements form dataArray
 
-        self.driveFR_EncPub = self.coreTable.getDoubleTopic("driveFR_Enc").publish()
+        # self.txFromDataArrayPub = self.coreTable.getDoubleTopic("txFromDataArray").publish()
 
-        self.driveFL_EncPub = self.coreTable.getDoubleTopic("driveFL_Enc").publish()
+        # self.tzFromDataArrayPub = self.coreTable.getDoubleTopic("tzFromDataArray").publish()
 
-        self.driveBL_EncPub = self.coreTable.getDoubleTopic("driveBL_Enc").publish()
+        # self.RyFromDataArrayPub = self.coreTable.getDoubleTopic("RyFromDataArray").publish()
 
-        self.driveBR_EncPub = self.coreTable.getDoubleTopic("driveBR_Enc").publish()
+        # self.targetDistancePub = self.coreTable.getDoubleTopic("targetDistance").publish()
 
 
-        self.rotationFR_EncPub = self.coreTable.getDoubleTopic("rotationFR_Enc").publish()
 
-        self.rotationFL_EncPub = self.coreTable.getDoubleTopic("rotationFL_Enc").publish()
+        # # Drive system telemetry
 
-        self.rotationBR_EncPub = self.coreTable.getDoubleTopic("rotationBR_Enc").publish()
+        # self.driveFR_EncPub = self.coreTable.getDoubleTopic("driveFR_Enc").publish()
 
-        self.rotationBL_EncPub = self.coreTable.getDoubleTopic("rotationBL_Enc").publish()
+        # self.driveFL_EncPub = self.coreTable.getDoubleTopic("driveFL_Enc").publish()
+
+        # self.driveBL_EncPub = self.coreTable.getDoubleTopic("driveBL_Enc").publish()
+
+        # self.driveBR_EncPub = self.coreTable.getDoubleTopic("driveBR_Enc").publish()
+
+
+        # self.rotationFR_EncPub = self.coreTable.getDoubleTopic("rotationFR_Enc").publish()
+
+        # self.rotationFL_EncPub = self.coreTable.getDoubleTopic("rotationFL_Enc").publish()
+
+        # self.rotationBR_EncPub = self.coreTable.getDoubleTopic("rotationBR_Enc").publish()
+
+        # self.rotationBL_EncPub = self.coreTable.getDoubleTopic("rotationBL_Enc").publish()
 
 
 

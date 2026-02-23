@@ -41,8 +41,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
         ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
         
-        rev_resets = rev.ResetMode.kResetSafeParameters  
-                                          
+        rev_resets = rev.ResetMode.kResetSafeParameters    
         rev_persists = rev.PersistMode.kPersistParameters
 
         self.climbingMotor1.configure(ElevatorConstants.k_config, rev_resets, rev_persists)
@@ -51,7 +50,6 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.controller = self.climbingMotor1.getClosedLoopController()
 
         self.encoder = self.climbingMotor1.getEncoder()
-        self.encoder2 = self.follower.getEncoder()
         self.encoder.setPosition(self.goal)
         self.enable()
 
@@ -73,7 +71,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
     
     def printHeight(self):
         print(self.encoder.getPosition())
-        message = f'kanID 9: {self.encoder.getPosition} kanID 10: {self.encoder2.getPosition}'
+        message = f'kanID 9: {self.encoder.getPosition:.2f} kanID 10: {self.encoder2.getPosition:.2f}'
         print(message)
 
 
@@ -86,7 +84,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         # print(f'setting goal to {self.goal}')
         self.setGoal(self.goal)
         self.at_goal = False
-        message = f'setting new goal {self.goal} between {ElevatorConstants.k_min_height} and {ElevatorConstants.k_max_height}'
+        message = f'setting new goal {self.goal:.2f} between {ElevatorConstants.k_min_height:.2f} and {ElevatorConstants.k_max_height:.2f}'
         print(message)
 
     def move_meters(self, delta_meters: float, silent=False) -> None:  # way to bump up and down for testing

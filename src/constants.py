@@ -119,7 +119,7 @@ class ElevatorConstants:
     # therefore, according to the wpilib standard, we will use m
     # 24 tooth sprocket, no. 25 chain
 
-    k_counter_offset = 5
+    k_counter_offset = 0
   
     k_CAN_id = 9
     k_follower_CAN_id = 10
@@ -138,21 +138,21 @@ class ElevatorConstants:
     k_mass_kg = lbsToKilograms(19)
     k_plant = DCMotor.NEO(2)
 
-    k_min_height = 0
-    k_max_height = 18
+    k_min_height = inchesToMeters(0)
+    k_max_height = inchesToMeters(20)
     k_tolerance = 2 / 100 # 2 cm
 
     k_sim_starting_height = 2
 
     k_config = SparkMaxConfig()
     k_config.voltageCompensation(12)            
-    k_config.inverted(False)
+    k_config.inverted(True)
 
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
 
     # k_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.)
-    k_config.closedLoop.pid(p=1.4, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=1.0, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.outputRange(-1, 1)

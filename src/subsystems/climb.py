@@ -71,8 +71,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
     
     def printHeight(self):
         print(self.encoder.getPosition())
-        message = f'kanID 9: {self.encoder.getPosition:.2f} kanID 10: {self.encoder2.getPosition:.2f}'
-        print(message)
+
 
 
 

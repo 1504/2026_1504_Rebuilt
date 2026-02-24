@@ -124,8 +124,8 @@ class ElevatorConstants:
     k_CAN_id = 9
     k_follower_CAN_id = 10
     k_name = 'Main Elevator'
-    k_max_velocity_meter_per_second = 2
-    k_max_acceleration_meter_per_sec_squared = 5
+    k_max_velocity_meter_per_second = 1.5
+    k_max_acceleration_meter_per_sec_squared = 4
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 0.88 / 2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
     k_kV_volt_second_per_radian = 12.05  # stays the same with one or two motors, based on the NEO itself and gear ratio

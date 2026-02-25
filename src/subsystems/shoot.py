@@ -34,7 +34,7 @@ class ShootSubsystem(Subsystem):
         
         # Targets
         self.target_velocity = 0.0
-        self.shooter_tolerance = 2.0
+        self.shooter_tolerance = 10.0
         self.target_feeder_rpm = 0.0
         self.feeder_tolerance = 50.0 #at speed check
         
@@ -46,16 +46,16 @@ class ShootSubsystem(Subsystem):
         self.addChild("Shooter Right", self.shootMotor2)
         
     def allShoot(self):
-        self.feedMotor.set(-0.4)
-        self.shootMotor1.set(-0.4)
-        self.shootMotor2.set(0.4)
+        self.feedMotor.set(0.2)
+        self.shootMotor1.set(0.5)
+        self.shootMotor2.set(0.5)
     
     def feed(self):
-        self.feedMotor.set(-0.4)
+        self.feedMotor.set(0.2)
     
     def shoot(self):  
-        self.shootMotor1.set(-0.4)
-        self.shootMotor2.set(0.4)
+        self.shootMotor1.set(0.5)
+        self.shootMotor2.set(0.5)
         
     def stop_shooter(self):
         """Stop the shooter motors"""
@@ -78,16 +78,16 @@ class ShootSubsystem(Subsystem):
         
         # PID Configuration (Slot 0)
         # IMPORTANT: Tune these values
-        config.slot0.k_p = 0.05  # Start with this, tune up or down
+        config.slot0.k_p = 0.5  # Start with this, tune up or down
         config.slot0.k_i = 0.0   # Usually not needed for velocity
         config.slot0.k_d = 0.0   # Add if needed for stability
         config.slot0.k_v = 0.12  # Feedforward - critical for consistency!
-        config.slot0.k_s = 0.01  # Static friction compensation
+        config.slot0.k_s = 0.1  # Static friction compensation
         
         # Current limits for safety
-        config.current_limits.supply_current_limit = 10
+        config.current_limits.supply_current_limit = 50
         config.current_limits.supply_current_limit_enable = True
-        config.current_limits.stator_current_limit = 20
+        config.current_limits.stator_current_limit = 60
         config.current_limits.stator_current_limit_enable = True
         
         # Motor output settings
@@ -133,7 +133,7 @@ class ShootSubsystem(Subsystem):
         
         # Apply velocity control to both motors
         self.shootMotor1.set_control(
-            self.velocity_control.with_velocity(velocity_rps)
+            self.velocity_control.with_velocity(velocity_rps+10)
         )
         self.shootMotor2.set_control(
             self.velocity_control.with_velocity(velocity_rps)
@@ -214,7 +214,7 @@ class ShootSubsystem(Subsystem):
         
         
 class ShootCommand(Command):
-    def __init__(self, shoot_subsystem, target_velocity: float=0.5):
+    def __init__(self, shoot_subsystem, target_velocity: float=20):
         """
         Command to shoot at a specific velocity
         

@@ -133,7 +133,7 @@ class ShootSubsystem(Subsystem):
         
         # Apply velocity control to both motors
         self.shootMotor1.set_control(
-            self.velocity_control.with_velocity(velocity_rps+10)
+            self.velocity_control.with_velocity(velocity_rps+10)                 ###$#
         )
         self.shootMotor2.set_control(
             self.velocity_control.with_velocity(velocity_rps)
@@ -214,7 +214,7 @@ class ShootSubsystem(Subsystem):
         
         
 class ShootCommand(Command):
-    def __init__(self, shoot_subsystem, target_velocity: float=20):
+    def __init__(self, shoot_subsystem, target_velocity: float=42):
         """
         Command to shoot at a specific velocity
         

@@ -5,7 +5,7 @@
 
 [tool.robotpy]
 # Version of robotpy this project depends on
-robotpy_version = "2026.2.1"
+robotpy_version = "2026.2.1.1"
 
 [tool.robotpy.pyfrc]
 # specifies the method of testing
@@ -16,13 +16,11 @@ isolated = true
 components  = [
     # "all"
     # "apriltag"
-    "commands2",
-    # "cscore"
-    "navx",
+    "robotpy-commands-v2",
     "pathplannerlib",
     # "phoenix5"
     "phoenix6",
-    # "playingwithfusion"
+    "navx",
     "rev"
     # "romi"
     # "sim"

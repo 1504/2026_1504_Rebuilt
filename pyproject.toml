@@ -5,7 +5,7 @@
 
 [tool.robotpy]
 # Version of robotpy this project depends on
-team_number = 2429
+team_number = 1504
 robotpy_version = "2026.2.1.1"
 
 
@@ -19,4 +19,7 @@ components  = [
 ]
 
 # Other pip packages to install
-requires = ["robotpy-navx>=2026.0.0"]
+requires = [
+    "robotpy-navx>=2026.0.0",
+    "robotpy-rev>=2026.0.1"
+    ]

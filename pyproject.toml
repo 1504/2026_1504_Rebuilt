@@ -5,7 +5,7 @@
 
 [tool.robotpy]
 # Version of robotpy this project depends on
-robotpy_version = "2026.2.1"
+robotpy_version = "2026.2.1.1"
 
 [tool.robotpy.pyfrc]
 # specifies the method of testing
@@ -30,4 +30,4 @@ components  = [
 ]
 
 # Other pip packages to install
-requires = ["pynetworktables", "pynetconsole", "robotpy-navx", "robotpy-rev"]
+requires = ["pynetworktables", "pynetconsole", "robotpy-navx", "robotpy-rev", "phoenix6", "robotpy-apriltag", "robotpy-pathplannerlib"]

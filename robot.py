@@ -3,8 +3,7 @@ import wpimath
 import wpilib.drive
 import wpimath.filter
 import wpimath.controller
-import navx
-import src.subsystems.drivesubsystem as drivesubsystem
+
 import commands2
 import src.subsystems.climb as climb
 import src.constants as constants
@@ -22,7 +21,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.counter = 0
         #self.driver_controller = commands2.button.CommandXboxController(0)
         self.gadget_controller = commands2.button.CommandXboxController(1)
-        self.swerve = drivesubsystem.DriveSubsystem()
+     
         self.climb_subsystem = climb.Elevator()
         self.intake_subsystem = intake.IntakeSubsystem()
         
@@ -85,64 +84,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testPeriodic(self) -> None:
         pass
 
-    def driveWithJoystick(self, field_relative: bool) -> None:
-        # Get the x speed. We are inverting this because Xbox controllers return
-        # negative values when we push forward.
-        x_speed = (
-            -self.x_speed_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getLeftY(), 0.08)
-            )
-            # * drivesubsystem.kMaxSpeed
-        )
-
-        # Get the y speed or sideways/strafe speed. We are inverting this because
-        # we want a positive value when we pull to the left. Xbox controllers
-        # return positive values when you pull to the right by default.
-        y_speed = (
-            -self.y_speed_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getLeftX(), 0.08)
-            )
-            # * drivesubsystem.kMaxSpeed
-        )
-
-        # Get the rate of angular rotation. We are inverting this because we want a
-        # positive value when we pull to the left (remember, CCW is positive in
-        # mathematics). Xbox controllers return positive values when you pull to
-        # the right by default.
-        rot = (
-            -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
-            )
-            # * drivesubsystem.kMaxSpeed
-        )
-
-
-        self.swerve.drive(x_speed, y_speed, rot, field_relative, rate_limit=True)
-
-    def slowdwj(self, field_relative: bool) -> None:
-        x_speed = (
-            -self.x_speed_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getLeftY(), 0.08)
-            )
-             * 0.2
-        )
-
-        y_speed = (
-            -self.y_speed_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getLeftX(), 0.08)
-            )
-             * 0.2
-        )
-
-        rot = (
-            -self.rot_limiter.calculate(
-                wpimath.applyDeadband(self.driver_controller.getRightX(), 0.08)
-            )
-             * 0.2
-        )
-
-
-        self.swerve.drive(x_speed, y_speed, rot,field_relative, rate_limit=True)
+   
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

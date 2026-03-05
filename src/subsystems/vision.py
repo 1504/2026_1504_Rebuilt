@@ -13,10 +13,10 @@ class VisionSubsystem(Subsystem):
         self.botpose_sub = self.limelight_table.getDoubleArrayTopic("botpose_wpiblue").subscribe([0]*11)
 
         # --- PHYSICAL CONSTANTS (Verified for your setup) ---
-        self.LENS_HEIGHT = 36.25      # Carpet to lens center
-        self.TARGET_HEIGHT = 44.25    # Carpet to AprilTag center
-        self.MOUNT_ANGLE_DEG = 10.0   # Tilted UP 10 degrees
-        self.LENS_TO_BUMPER = 13.5    # Lens distance from front bumper
+        self.LENS_HEIGHT = 37      # Carpet to lens center
+        self.TARGET_HEIGHT = 45    # Carpet to AprilTag center
+        self.MOUNT_ANGLE_DEG = 0   # Tilted UP 10 degrees
+        self.LENS_TO_BUMPER = 15    # Lens distance from front bumper
         
         self.height_diff = self.TARGET_HEIGHT - self.LENS_HEIGHT # 8.0"
 
@@ -38,7 +38,7 @@ class VisionSubsystem(Subsystem):
         # --- THE CALCULATION ---
         # Switch to subtraction because 10 + ty was producing 14 inches.
         # This accounts for the Limelight's coordinate system relative to a 10 deg tilt.
-        total_angle_deg = self.MOUNT_ANGLE_DEG - ty 
+        total_angle_deg = self.MOUNT_ANGLE_DEG + ty 
         
         # Prevent math errors (Tan of 0 or negative)
         if total_angle_deg < 0.5:

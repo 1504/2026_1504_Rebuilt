@@ -210,7 +210,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.swerve.drive(0,0,self.camera.getX() * 0.05, False, True)
         #elif(self.timer.get()%3==0):
         else:
-            self.swerve.drive(.1,0,0, False ,True)
+            self.swerve.drive(.04,0,0, False ,True)
 
 
 

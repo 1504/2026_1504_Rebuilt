@@ -1,111 +1,204 @@
+"""
+Team 1504 Desperate Penguins - Constants
+2026 Season | FRC Game: Rebuilt
+
+All hardware IDs, tuning values, and physical measurements in one place.
+Group by subsystem so it's easy to find things.
+"""
+
 import math
 import rev
-import wpilib
 import wpimath.trajectory
-from rev import SparkMax, SparkMaxConfig, SparkFlex, SparkFlexConfig, SparkBase
+from rev import SparkMaxConfig
 
-""" DRIVE CONSTANTS """
-# Driving parameters - Note that these are not the maximum capable speeds of
-# the robot, rather the allowed maximum speeds
-kMaxSpeed = 4.8
-kMaxAngularSpeed = 2 * math.pi
 
-kDirectionSlewRate = 1.2 # radians per second
-kMagnitudeSlewRate = 1.8 # percent per second (1 = 100%)
-kRotationalSlewRate = 2.0 # percent per second (1 = 100%)
+# ─────────────────────────────────────────────────────────────────────────────
+# OPERATOR INTERFACE
+# ─────────────────────────────────────────────────────────────────────────────
+class OIConstants:
+    kDriverPort = 0
+    kOperatorPort = 1
+    kDriveDeadband = 0.08
+    kRotDeadband = 0.10          # Slightly tighter on rotation to prevent drift
+    kSlowModeMultiplier = 0.30   # 30% speed while slow mode held       # Translation deadband
+    kRotDeadband   = 0.12       # Rotation deadband — slightly higher to kill drift
 
-# Chassis configuration
-kTrackWidth = 0.5715 # Distance between centers of right and left wheels on robot METERS
-kWheelBase = 0.5715 # Distance between centers of front and back wheels on robot METERS
 
-# Angular offsets of the modules relative to the chassis in radians
-kFrontLeftChassisAngularOffset = -math.pi / 2
-kFrontRightChassisAngularOffset = 0
-kRearLeftChassisAngularOffset = math.pi
-kRearRightChassisAngularOffset = math.pi / 2
+# ─────────────────────────────────────────────────────────────────────────────
+# SWERVE DRIVE
+# ─────────────────────────────────────────────────────────────────────────────
+class DriveConstants:
+    # Physical limits (what the robot is ALLOWED to do in teleop)
+    kMaxSpeedMps = 4.8          # meters per second
+    kMaxAngularSpeedRps = 2 * math.pi   # radians per second
 
-# SPARK MAX CAN IDs
-kRearRightDrivingCanId = 1
-kRearRightTurningCanId = 2
+    # Slew rate limits (how fast speed/rotation can change)
+    kDirectionSlewRate = 1.2    # rad/s
+    kMagnitudeSlewRate = 1.8    # % per second
+    kRotationalSlewRate = 2.0   # % per second
 
-kRearLeftDrivingCanId = 3
-kRearLeftTurningCanId = 4
+    # Slow mode — fraction of max speed applied when slow mode button is held
+    kSlowModeMultiplier = 0.3   # 30% of full speed — tune up/down as needed
 
-kFrontLeftDrivingCanId = 5
-kFrontLeftTurningCanId = 6
+    # Chassis geometry (center-to-center of wheels, in meters)
+    kTrackWidth = 0.5715
+    kWheelBase  = 0.5715
 
-kFrontRightDrivingCanId = 7
-kFrontRightTurningCanId = 8
+    # Angular offsets of each module relative to chassis (radians)
+    kFrontLeftChassisOffset  = -math.pi / 2
+    kFrontRightChassisOffset = 0.0
+    kRearLeftChassisOffset   = math.pi
+    kRearRightChassisOffset  = math.pi / 2
 
-""" MODULE CONSTANTS """
-# Invert the turning encoder, since the output shaft rotates in the opposite direction
-# of the steering motor in the MAXSwerve Module
-kTurningEncoderInverted = True
+    # Absolute encoder offsets (tuned per robot - check with REV Hardware Client)
+    kFrontLeftEncoderOffset  = 0.8546
+    kFrontRightEncoderOffset = 0.665
+    kRearLeftEncoderOffset   = 0.803
+    kRearRightEncoderOffset  = 0.1814
 
-# The MaxSwerve module can be configured with one of the three pinion gears: 12T, 13T, or 14T.
-# This changes the drive speed of the module ( a pinion gear with more teeth will result in a robot that drives faster)
-kDrivingMotorPinionTeeth = 14
+    # ── CAN IDs ───────────────────────────────────────────────────
+    kFrontLeftDriveId  = 5
+    kFrontLeftTurnId   = 6
+    kFrontRightDriveId = 7
+    kFrontRightTurnId  = 8
+    kRearLeftDriveId   = 3
+    kRearLeftTurnId    = 4
+    kRearRightDriveId  = 1
+    kRearRightTurnId   = 2
 
-# Calculations required for driving motor conversion factors and feed forward
-kDrivingMotorFreeSpeedRps = 5676.0 / 60
-kWheelDiameter = 0.0762
-kWheelCircumference = kWheelDiameter * math.pi
+    # ── Gearing / conversion ──────────────────────────────────────
+    kDrivePinionTeeth = 14   # 12T / 13T / 14T options on MAXSwerve
+    kDriveMotorFreeSpeedRps = 5676.0 / 60  # NEO free speed
+    kWheelDiameterMeters = 0.0762
+    kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
+    kDriveMotorReduction = (45.0 * 22) / (kDrivePinionTeeth * 15)
+    kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction
 
-# 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15 teeth on the bevel pinion
-kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
-kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps * kWheelCircumference) / kDrivingMotorReduction
-kDrivingEncoderPositionFactor = (kWheelDiameter * math.pi) / kDrivingMotorReduction # Meters
-kDrivingEncoderVelocityFactor = ((kWheelDiameter * math.pi) / kDrivingMotorReduction) / 60.0 # Meters per second
+    kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction  # meters
+    kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0                # m/s
 
-kTurningEncoderPositionFactor = (2 * math.pi) # radians
-kTurningEncoderVelocityFactor = (2 * math.pi) / 60.0 # meters per second
+    kTurnEncoderPositionFactor = 2 * math.pi   # radians
+    kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
+    kTurnEncoderInverted = True
 
-kTurningEncoderPositionPIDMinInput = 0
-kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor
+    # ── PID (SparkMax onboard) ─────────────────────────────────────
+    kDriveP  = 0.04
+    kDriveI  = 0.0
+    kDriveD  = 0.0
+    kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
 
-kDrivingP = 0.04
-kDrivingI = 0
-kDrivingD = 0
-kDrivingFF = (1/kDriveWheelFreeSpeedRps)
-kDrivingMinOutput = -1
-kDrivingMaxOutput = 1
+    kTurnP  = 2.0
+    kTurnI  = 0.0
+    kTurnD  = 0.0
+    kTurnFF = 0.0
 
-kTurningP = 2
-kTurningI = 0
-kTurningD = 0
-kTurningFF = 0
-kTurningMinOutput = -1
-kTurningMaxOutput = 1
+    kDriveMinOutput = -1.0
+    kDriveMaxOutput =  1.0
+    kTurnMinOutput  = -1.0
+    kTurnMaxOutput  =  1.0
 
-kDrivingMotorIdleMode: SparkMax.IdleMode = SparkMaxConfig.IdleMode.kCoast
-kTurningMotorIdleMode: SparkMax.IdleMode = SparkMaxConfig.IdleMode.kCoast
+    kDriveIdleMode = SparkMaxConfig.IdleMode.kCoast
+    kTurnIdleMode  = SparkMaxConfig.IdleMode.kCoast
 
-kDrivingMotorCurrentLimit = 50 # Amps
-kTurningMotorCurrentLimit = 20 # Amps
+    kDriveCurrentLimit = 50   # Amps
+    kTurnCurrentLimit  = 20   # Amps
 
-# Absolute encoder offsets for each module
-kRearRightAbsoluteEncoderOffset  = 0.1814
-kRearLeftAbsoluteEncoderOffset   = 0.803
-kFrontLeftAbsoluteEncoderOffset  = 0.8546
-kFrontRightAbsoluteEncoderOffset = 0.665
 
-""" Auto Constants """
-kMaxSpeed = 3 # meters per second
-kMaxAcceleration = 2 # meters per second squared
-kMaxAngularSpeed = 3.142 # radians per second
-kMaxAngularAcceleration = 3.142 # radians per second squared
+# ─────────────────────────────────────────────────────────────────────────────
+# SHOOTER  (Phoenix6 TalonFX — Kraken X60 or Falcon 500)
+# ─────────────────────────────────────────────────────────────────────────────
+class ShooterConstants:
+    kShooterMotor1Id = 20   # TalonFX CAN ID
+    kShooterMotor2Id = 21   # TalonFX CAN ID (follows / opposite polarity)
+    kFeederMotorId   = 10   # SparkMax CAN ID (NEO 550 or similar)
 
-kPXController = 0.5
-kPYController = 0.5
-kPThetaController = 0.5
+    # Velocity PID (slot 0 on TalonFX — tuned in Phoenix Tuner X)
+    kShooterP  = 0.5
+    kShooterI  = 0.0
+    kShooterD  = 0.0
+    kShooterKv = 0.12   # V per RPS - start here, tune with Tuner X
 
-kThetaControllerConstraints = wpimath.trajectory.TrapezoidProfile.Constraints(kMaxAngularSpeed, kMaxAngularAcceleration)
+    # Tolerance for "at speed" check (RPS)
+    kVelocityToleranceRps = 2.0
 
-""" OI Constants """
-kDriverControllerPort = 0
-kGadgetControllerPort = 1
-kDriveDeadband = 0.08
+    # Feeder duty cycle
+    kFeederSpeed = 0.6
 
-""" Elevator Constants """
-kL1RotationDistance = 1.0 #unit is # rotations of the motor
+    kFeederCurrentLimit = 20   # Amps — NEO 1.1
+    kFlywheelCurrentLimit = 60  # Amps — NEO Vortex (SparkFlex)
 
+    # Distance → shooter RPS lookup table
+    # Format: (distance_meters, target_rps)
+    # Measure and add real values from testing!
+    kShooterTable = [
+        (1.5,  35.0),
+        (2.0,  40.0),
+        (2.5,  45.0),
+        (3.0,  50.0),
+        (3.5,  55.0),
+    ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INTAKE
+# ─────────────────────────────────────────────────────────────────────────────
+class IntakeConstants:
+    kLeftMotorId  = 12   # SparkMax
+    kRightMotorId = 11   # SparkMax
+    kFuelSensorChannel = 9   # DIO
+
+    kIntakeSpeed = 0.8
+    kReverseSpeed = -0.5
+
+    kCurrentLimit = 30  # Amps
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLIMBER
+# ─────────────────────────────────────────────────────────────────────────────
+class ClimberConstants:
+    kClimberMotorId = 30   # TalonFX or SparkMax - update to match hardware
+    kClimbSpeed = 0.8
+    kDescendSpeed = -0.5
+    kCurrentLimit = 40
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VISION
+# ─────────────────────────────────────────────────────────────────────────────
+class VisionConstants:
+    kLimelightName = "limelight"
+    # Robot-to-camera transform (update after measuring robot)
+    # (forward, left, up, roll, pitch, yaw) in meters and degrees
+    kCameraToRobotX = 0.0
+    kCameraToRobotY = 0.0
+    kCameraToRobotZ = 0.5
+    kCameraRoll  = 0.0
+    kCameraPitch = 25.0  # degrees - tilted up slightly
+    kCameraYaw   = 0.0
+
+    # Pose estimation trust thresholds (tighten when confident)
+    kSingleTagStdDevs = (4.0, 4.0, 8.0)   # x, y, theta (meters, meters, rad)
+    kMultiTagStdDevs  = (0.5, 0.5, 1.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTONOMOUS
+# ─────────────────────────────────────────────────────────────────────────────
+class AutoConstants:
+    kMaxSpeedMps = 3.0
+    kMaxAccelMps2 = 2.0
+    kMaxAngularSpeedRps = math.pi
+    kMaxAngularAccelRps2 = math.pi
+
+    kPxController = 0.5
+    kPyController = 0.5
+    kPThetaController = 0.5
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEDs
+# ─────────────────────────────────────────────────────────────────────────────
+class LEDConstants:
+    kLEDPort = 0      # PWM port on roboRIO
+    kLEDLength = 60   # Number of LEDs in strip

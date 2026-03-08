@@ -49,6 +49,7 @@ class RobotContainer:
 
         # ── Default commands ──────────────────────────────────────
         # Drive with joystick by default (field-relative)
+        # Hold Left Bumper for slow mode
         self.drive.setDefaultCommand(
             drive_cmds.TeleopDriveCommand(
                 self.drive,
@@ -56,6 +57,7 @@ class RobotContainer:
                 lambda: -self.driver.getLeftX(),
                 lambda: -self.driver.getRightX(),
                 field_relative=True,
+                slow_mode_supplier=lambda: self.driver.getHID().getLeftBumper(),
             )
         )
 
@@ -130,8 +132,10 @@ class RobotContainer:
         ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
     def configure_teleop(self) -> None:
-        """Called by teleopInit - put any teleop-specific one-time setup here."""
-        pass
+        """Called by teleopInit on every teleop enable."""
+        # Reset slew limiters so the robot doesn't drift or lurch from
+        # whatever state they held during auto or disabled.
+        self.drive.reset_slew()
 
     # ─────────────────────────────────────────────────────────────
     # AUTONOMOUS

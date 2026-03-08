@@ -169,6 +169,20 @@ class DriveSubsystem(commands2.Subsystem):
     def stop(self) -> None:
         self.drive(0.0, 0.0, 0.0, False, False)
 
+    def reset_slew(self) -> None:
+        """
+        Zero all slew rate limiter state.
+        Call this at the start of teleop and whenever the drive command
+        is first scheduled — prevents stale values from a previous mode
+        causing the robot to drift or lurch on enable.
+        """
+        self._mag_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
+        self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
+        self._current_translation_dir = 0.0
+        self._current_translation_mag = 0.0
+        self._current_rotation = 0.0
+        self._prev_time = wpilib.Timer.getFPGATimestamp()
+
     # ─────────────────────────────────────────────────────────────
     # POSE / ODOMETRY
     # ─────────────────────────────────────────────────────────────

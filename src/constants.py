@@ -19,6 +19,9 @@ class OIConstants:
     kDriverPort = 0
     kOperatorPort = 1
     kDriveDeadband = 0.08
+    kRotDeadband = 0.10          # Slightly tighter on rotation to prevent drift
+    kSlowModeMultiplier = 0.30   # 30% speed while slow mode held       # Translation deadband
+    kRotDeadband   = 0.12       # Rotation deadband — slightly higher to kill drift
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +36,9 @@ class DriveConstants:
     kDirectionSlewRate = 1.2    # rad/s
     kMagnitudeSlewRate = 1.8    # % per second
     kRotationalSlewRate = 2.0   # % per second
+
+    # Slow mode — fraction of max speed applied when slow mode button is held
+    kSlowModeMultiplier = 0.3   # 30% of full speed — tune up/down as needed
 
     # Chassis geometry (center-to-center of wheels, in meters)
     kTrackWidth = 0.5715
@@ -118,7 +124,8 @@ class ShooterConstants:
     # Feeder duty cycle
     kFeederSpeed = 0.6
 
-    kFeederCurrentLimit = 20   # Amps
+    kFeederCurrentLimit = 20   # Amps — NEO 1.1
+    kFlywheelCurrentLimit = 60  # Amps — NEO Vortex (SparkFlex)
 
     # Distance → shooter RPS lookup table
     # Format: (distance_meters, target_rps)

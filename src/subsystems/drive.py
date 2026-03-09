@@ -71,7 +71,8 @@ class DriveSubsystem(commands2.Subsystem):
             self.kinematics,
             self.gyro.getRotation2d(),
             self._get_module_positions(),
-            wpimath.geometry.Pose2d(),
+            initialPose=wpimath.geometry.Pose2d(DriveConstants.k_start_x, DriveConstants.k_start_y,
+                                    self.gyro.getRotation2d())
         )
 
         # ── Slew rate limiters ────────────────────────────────────

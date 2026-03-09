@@ -103,6 +103,9 @@ class DriveConstants:
     kDriveCurrentLimit = 50   # Amps
     kTurnCurrentLimit  = 20   # Amps
 
+    k_start_x = 241
+    k_start_y = 158
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SHOOTER  (Phoenix6 TalonFX — Kraken X60 or Falcon 500)

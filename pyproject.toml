@@ -25,5 +25,6 @@ requires = [
     "robotpy-rev>=2026.0.1",
     "phoenix6",
     "pynetconsole",
-    "pynetworktables"
+    "pynetworktables",
+    "robotpy-pathplannerlib"
     ]

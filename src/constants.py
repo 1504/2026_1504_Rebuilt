@@ -7,7 +7,7 @@ from rev import SparkMax, SparkMaxConfig, SparkFlex, SparkFlexConfig, SparkBase
 """ DRIVE CONSTANTS """
 # Driving parameters - Note that these are not the maximum capable speeds of
 # the robot, rather the allowed maximum speeds
-kMaxSpeed = 4.8
+kMaxSpeed = 1.6
 kMaxAngularSpeed = 2 * math.pi
 
 kDirectionSlewRate = 1.2 # radians per second

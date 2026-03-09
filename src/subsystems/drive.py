@@ -13,6 +13,7 @@ import math
 import wpilib
 import wpimath.geometry
 import wpimath.kinematics
+from wpimath.kinematics import ChassisSpeeds
 import wpimath.estimator
 import wpimath.filter
 import wpimath.units
@@ -214,7 +215,8 @@ class DriveSubsystem(commands2.Subsystem):
 
     def zero_heading(self) -> None:
         self.gyro.reset()
-
+    def get_chassisSpeeds(self) -> ChassisSpeeds:
+        return self.kinematics.toChassisSpeeds(self.front_left.get_state,self.front_right.get_state,self.rear_left.get_state,self.rear_right.get_state)
     def get_heading_degrees(self) -> float:
         return self.gyro.getAngle()
 

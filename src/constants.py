@@ -29,7 +29,7 @@ class OIConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
     # Physical limits (what the robot is ALLOWED to do in teleop)
-    kMaxSpeedMps = 4.8          # meters per second
+    kMaxSpeedMps = 1.6          # meters per second
     kMaxAngularSpeedRps = 2 * math.pi   # radians per second
 
     # Slew rate limits (how fast speed/rotation can change)
@@ -189,8 +189,8 @@ class VisionConstants:
 # AUTONOMOUS
 # ─────────────────────────────────────────────────────────────────────────────
 class AutoConstants:
-    kMaxSpeedMps = 3.0
-    kMaxAccelMps2 = 2.0
+    kMaxSpeedMps = 1.5
+    kMaxAccelMps2 = 1.0
     kMaxAngularSpeedRps = math.pi
     kMaxAngularAccelRps2 = math.pi
 

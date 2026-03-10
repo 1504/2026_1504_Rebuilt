@@ -109,3 +109,9 @@ kDriveDeadband = 0.08
 """ Elevator Constants """
 kL1RotationDistance = 1.0 #unit is # rotations of the motor
 
+""" Intake Constances"""
+kLeftIntakeSliderRevCANId = 14
+kRightIntakeSliderRevCanId = 19
+
+kIntakeNeoFrontCanId = 8
+kIntakeNeoRearCanID = 9

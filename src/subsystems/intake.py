@@ -19,8 +19,8 @@ class IntakeSubsystem(Subsystem):
         super().__init__()
 
         # --- Slide Motors (NEO on SparkMax) ---
-        self.slideMotor1 = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
-        self.slideMotor2 = rev.SparkMax(2, rev.SparkMax.MotorType.kBrushless)
+        self.slideMotor1 = rev.SparkMax(14, rev.SparkMax.MotorType.kBrushless)
+        self.slideMotor2 = rev.SparkMax(19, rev.SparkMax.MotorType.kBrushless)
 
         # --- Intake Motors (SparkFlex) ---
         self.intakeMotor1 = rev.SparkFlex(3, rev.SparkFlex.MotorType.kBrushless)

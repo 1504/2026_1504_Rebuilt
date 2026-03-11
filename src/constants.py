@@ -19,9 +19,8 @@ class OIConstants:
     kDriverPort = 0
     kOperatorPort = 1
     kDriveDeadband = 0.08
-    kRotDeadband = 0.10          # Slightly tighter on rotation to prevent drift
-    kSlowModeMultiplier = 0.30   # 30% speed while slow mode held       # Translation deadband
-    kRotDeadband   = 0.12       # Rotation deadband — slightly higher to kill drift
+    kRotDeadband = 0.12          # Slightly tighter on rotation to prevent drift
+    kSlowModeMultiplier = 0.30   # 30% speed while slow mode held
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -32,13 +31,14 @@ class DriveConstants:
     kMaxSpeedMps = 4.8          # meters per second
     kMaxAngularSpeedRps = 2 * math.pi   # radians per second
 
-    # Slew rate limits (how fast speed/rotation can change)
-    kDirectionSlewRate = 1.2    # rad/s
-    kMagnitudeSlewRate = 1.8    # % per second
-    kRotationalSlewRate = 2.0   # % per second
+    # Slew rate limits — per axis (X and Y slewed independently)
+    # Higher = more responsive, lower = smoother.
+    # 4.0 is a good starting point; raise toward 6.0 if still sluggish.
+    kMagnitudeSlewRate = 4.0    # units/second per axis
+    kRotationalSlewRate = 3.0   # units/second
 
     # Slow mode — fraction of max speed applied when slow mode button is held
-    kSlowModeMultiplier = 0.3   # 30% of full speed — tune up/down as needed
+    kSlowModeMultiplier = 0.3   # 30% of full speed
 
     # Chassis geometry (center-to-center of wheels, in meters)
     kTrackWidth = 0.5715
@@ -97,8 +97,11 @@ class DriveConstants:
     kTurnMinOutput  = -1.0
     kTurnMaxOutput  =  1.0
 
-    kDriveIdleMode = SparkMaxConfig.IdleMode.kCoast
-    kTurnIdleMode  = SparkMaxConfig.IdleMode.kCoast
+    # Brake mode on both drive and turn:
+    # - Drive brake: robot decelerates quickly and holds position when input stops
+    # - Turn brake: wheels hold their angle instead of drifting
+    kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
+    kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
 
     kDriveCurrentLimit = 50   # Amps
     kTurnCurrentLimit  = 20   # Amps
@@ -129,7 +132,6 @@ class ShooterConstants:
 
     # Distance → shooter RPS lookup table
     # Format: (distance_meters, target_rps)
-    # Measure and add real values from testing!
     kShooterTable = [
         (1.5,  35.0),
         (2.0,  40.0),
@@ -168,17 +170,14 @@ class ClimberConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 class VisionConstants:
     kLimelightName = "limelight"
-    # Robot-to-camera transform (update after measuring robot)
-    # (forward, left, up, roll, pitch, yaw) in meters and degrees
     kCameraToRobotX = 0.0
     kCameraToRobotY = 0.0
     kCameraToRobotZ = 0.5
     kCameraRoll  = 0.0
-    kCameraPitch = 25.0  # degrees - tilted up slightly
+    kCameraPitch = 25.0
     kCameraYaw   = 0.0
 
-    # Pose estimation trust thresholds (tighten when confident)
-    kSingleTagStdDevs = (4.0, 4.0, 8.0)   # x, y, theta (meters, meters, rad)
+    kSingleTagStdDevs = (4.0, 4.0, 8.0)
     kMultiTagStdDevs  = (0.5, 0.5, 1.0)
 
 

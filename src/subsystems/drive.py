@@ -7,6 +7,7 @@ Key improvements over old code:
 - PathPlanner auto registration
 - Field2d widget for SmartDashboard visualization
 - Clean periodic telemetry logging
+- Per-axis slew rate limiting (replaces brittle polar slew logic)
 """
 
 import math
@@ -74,13 +75,12 @@ class DriveSubsystem(commands2.Subsystem):
             wpimath.geometry.Pose2d(),
         )
 
-        # ── Slew rate limiters ────────────────────────────────────
-        self._mag_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
+        # ── Per-axis slew rate limiters ───────────────────────────
+        # Slewing X and Y independently avoids all quadrant-change
+        # dead zones that the old polar magnitude/direction approach had.
+        self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
+        self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
-        self._current_translation_dir = 0.0
-        self._current_translation_mag = 0.0
-        self._current_rotation = 0.0
-        self._prev_time = wpilib.Timer.getFPGATimestamp()
 
         # ── Dashboard visualization ───────────────────────────────
         self.field = Field2d()
@@ -90,7 +90,6 @@ class DriveSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
-        # Update pose estimator with current wheel positions & gyro
         self.pose_estimator.update(
             self.gyro.getRotation2d(),
             self._get_module_positions(),
@@ -98,7 +97,6 @@ class DriveSubsystem(commands2.Subsystem):
         pose = self.pose_estimator.getEstimatedPosition()
         self.field.setRobotPose(pose)
 
-        # Telemetry
         SmartDashboard.putNumber("Drive/HeadingDeg", self.gyro.getAngle())
         SmartDashboard.putNumber("Drive/PoseX", pose.X())
         SmartDashboard.putNumber("Drive/PoseY", pose.Y())
@@ -171,17 +169,14 @@ class DriveSubsystem(commands2.Subsystem):
 
     def reset_slew(self) -> None:
         """
-        Zero all slew rate limiter state.
-        Call this at the start of teleop and whenever the drive command
-        is first scheduled — prevents stale values from a previous mode
-        causing the robot to drift or lurch on enable.
+        Reinitialize all slew rate limiters to a clean zero state.
+        Call at the start of teleop and whenever the drive command is
+        first scheduled — prevents stale values from auto/disabled
+        causing a jerk or drift on enable.
         """
-        self._mag_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
+        self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
+        self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
-        self._current_translation_dir = 0.0
-        self._current_translation_mag = 0.0
-        self._current_rotation = 0.0
-        self._prev_time = wpilib.Timer.getFPGATimestamp()
 
     # ─────────────────────────────────────────────────────────────
     # POSE / ODOMETRY
@@ -232,43 +227,13 @@ class DriveSubsystem(commands2.Subsystem):
         )
 
     def _apply_rate_limit(self, x_speed: float, y_speed: float) -> tuple[float, float]:
-        """Apply slew rate limiting to translation inputs."""
-        import math as _math
-        current_time = wpilib.Timer.getFPGATimestamp()
-        elapsed = current_time - self._prev_time
-        self._prev_time = current_time
-
-        input_translation_dir = _math.atan2(y_speed, x_speed)
-        input_translation_mag = _math.hypot(x_speed, y_speed)
-
-        slew_rate = (
-            DriveConstants.kDirectionSlewRate
-            if self._current_translation_mag != 0.0
-            else 500.0  # very fast when stopping
-        )
-
-        angle_diff = abs(input_translation_dir - self._current_translation_dir)
-        if angle_diff < _math.pi * 0.45 or angle_diff > _math.pi * 1.55:
-            self._current_translation_dir = _slerp_angle(
-                self._current_translation_dir, input_translation_dir, slew_rate * elapsed
-            )
-            self._current_translation_mag = self._mag_limiter.calculate(input_translation_mag)
-        elif angle_diff > _math.pi * 0.85 and angle_diff < _math.pi * 1.15:
-            self._current_translation_dir = _slerp_angle(
-                self._current_translation_dir, input_translation_dir, slew_rate * elapsed
-            )
-            self._current_translation_mag = self._mag_limiter.calculate(0.0)
-        else:
-            self._current_translation_mag = self._mag_limiter.calculate(0.0)
-
+        """
+        Per-axis slew rate limiting.
+        Slewing X and Y independently means quadrant changes are handled
+        naturally — each axis just chases its target value. No angle
+        binning, no branches that zero out your input mid-motion.
+        """
         return (
-            self._current_translation_mag * _math.cos(self._current_translation_dir),
-            self._current_translation_mag * _math.sin(self._current_translation_dir),
+            self._x_limiter.calculate(x_speed),
+            self._y_limiter.calculate(y_speed),
         )
-
-
-def _slerp_angle(current: float, target: float, max_step: float) -> float:
-    """Step toward target angle by at most max_step radians."""
-    import math
-    diff = (target - current + math.pi) % (2 * math.pi) - math.pi
-    return current + max(min(diff, max_step), -max_step)

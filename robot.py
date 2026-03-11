@@ -38,8 +38,8 @@ class MyRobot(commands2.TimedCommandRobot):
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() > 0.5).whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
 
         # intake Bindings
-        self.gadget_controller.rightTrigger().whileTrue(intake.PrimeCoralCommand(self.intake_subsystem))
-        self.gadget_controller.leftTrigger().whileTrue(intake.intat(self.intake_subsystem))
+        self.gadget_controller.rightTrigger().whileTrue(intake.IntakeOutCommand(self.intake_subsystem))
+        self.gadget_controller.leftTrigger().whileTrue(intake.IntakeInCommand(self.intake_subsystem))
         
 
         ## Core Functions

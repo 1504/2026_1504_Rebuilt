@@ -19,12 +19,12 @@ class IntakeSubsystem(Subsystem):
         super().__init__()
 
         # --- Slide Motors (NEO on SparkMax) ---
-        self.slideMotor1 = rev.SparkMax(14, rev.SparkMax.MotorType.kBrushless)
-        self.slideMotor2 = rev.SparkMax(19, rev.SparkMax.MotorType.kBrushless)
+        self.slideMotor1 = rev.SparkMax(constants.kLeftIntakeSliderRevCANId, rev.SparkMax.MotorType.kBrushless)
+        self.slideMotor2 = rev.SparkMax(constants.kRightIntakeSliderRevCanId, rev.SparkMax.MotorType.kBrushless)
 
         # --- Intake Motors (SparkFlex) ---
-        self.intakeMotor1 = rev.SparkFlex(3, rev.SparkFlex.MotorType.kBrushless)
-        self.intakeMotor2 = rev.SparkFlex(4, rev.SparkFlex.MotorType.kBrushless)
+        self.intakeMotor1 = rev.SparkFlex(constants.kIntakeNeoFrontCanId, rev.SparkFlex.MotorType.kBrushless)
+        self.intakeMotor2 = rev.SparkFlex(constants.kIntakeNeoRearCanID, rev.SparkFlex.MotorType.kBrushless)
 
         # Slide positions (rotations) — tune these to your actual slide travel
         self.SLIDE_IN  = 0.0
@@ -56,7 +56,7 @@ class IntakeSubsystem(Subsystem):
 
         # --- Configure Follower Slide Motor ---
         followerConfig = rev.SparkMaxConfig()
-        followerConfig.follow(1, invert=True)  # follow slideMotor1 (CAN ID 1), inverted
+        followerConfig.follow(constants.kLeftIntakeSliderRevCANId, invert=True)  # follow slideMotor1 (CAN ID 1), inverted
         followerConfig.smartCurrentLimit(40)
 
         self.slideMotor2.configure(
@@ -79,7 +79,7 @@ class IntakeSubsystem(Subsystem):
 
         # --- Configure Intake Follower (SparkFlex) ---
         intakeFollowerConfig = rev.SparkFlexConfig()
-        intakeFollowerConfig.follow(3, invert=True)  # follow intakeMotor1 (CAN ID 3)
+        intakeFollowerConfig.follow(constants.kIntakeNeoFrontCanId, invert=True)  # follow intakeMotor1 (CAN ID 3)
         intakeFollowerConfig.smartCurrentLimit(40)
 
         self.intakeMotor2.configure(

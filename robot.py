@@ -38,10 +38,9 @@ class MyRobot(commands2.TimedCommandRobot):
         # commands2.button.Trigger(lambda: self.gadget_controller.getLeftY() > 0.5).whileTrue(climb.ClimbDownCommand(self.climb_subsystem))
 
         # intake Bindings
-        # self.gadget_controller.leftBumper().whileTrue(intake.PrimeCoralCommand(self.intake_subsystem))
-        # self.gadget_controller.leftTrigger().whileTrue(intake.BackCoralCommand(self.intake_subsystem))
-        # self.gadget_controller.rightBumper().whileTrue(intake.slowForwardCoralCommand(self.intake_subsystem))#slow corel
-        # self.gadget_controller.rightTrigger().whileTrue(intake.fastForwardCoralCommand(self.intake_subsystem))#fast coral
+        self.gadget_controller.rightTrigger().whileTrue(intake.PrimeCoralCommand(self.intake_subsystem))
+        self.gadget_controller.leftTrigger().whileTrue(intake.intat(self.intake_subsystem))
+        
 
         ## Core Functions
 
@@ -160,17 +159,16 @@ class MyRobot(commands2.TimedCommandRobot):
     
 
     def teleopPeriodic(self) -> None:
+        pass
         # Teleop periodic logic
-        if self.driver_controller.getLeftTriggerAxis() > 0.1: 
-            self.slowdwj(False)
-        elif self.driver_controller.getRightTriggerAxis() > 0.1:
-            self.slowdwj(False)
-        elif self.driver_controller.rightBumper(True):
-            self.slowdwj(False)
-        elif self.driver_controller.leftBumper(True):
-            self.slowdwj(False)
-        else:
-            self.driveWithJoystick(True)
+       # elif self.driver_controller.getRightTriggerAxis() > 0.1:
+       #     self.slowdwj(False)
+       # elif self.driver_controller.rightBumper(True):
+       #     self.slowdwj(False)
+      #  elif self.driver_controller.leftBumper(True):
+       #     self.slowdwj(False)
+        #else:
+       #     self.driveWithJoystick(True)
         
     
     def testPeriodic(self) -> None:

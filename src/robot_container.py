@@ -113,9 +113,10 @@ class RobotContainer:
         self.auto_chooser.setDefaultOption("Do Nothing", None)
 
         # ── Add your PathPlanner autos here ───────────────────────
-        self.auto_chooser.addOption("2 Piece Center",    "2PieceCenter")
-        self.auto_chooser.addOption("1 Piece Mobility",  "1PieceMobility")
-        self.auto_chooser.addOption("3 Piece Center",    "3PieceCenter")
+        self.auto_chooser.addOption("Right",    "2PieceCenter")
+        self.auto_chooser.addOption("Left",  "1PieceMobility")
+        self.auto_chooser.addOption("Center",    "3PieceCenter")
+        self.auto_chooser.addOption("Easy auton", "ExactFileNameNoExtension")
         # Add more as you create them in the PathPlanner GUI
 
         SmartDashboard.putData("Auto Mode", self.auto_chooser)

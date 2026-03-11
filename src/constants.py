@@ -18,8 +18,8 @@ from rev import SparkMaxConfig
 class OIConstants:
     kDriverPort = 0
     kOperatorPort = 1
-    kDriveDeadband = 0.08
-    kRotDeadband = 0.12          # Slightly tighter on rotation to prevent drift
+    kDriveDeadband = 0.12
+    kRotDeadband = 0.18          # Slightly tighter on rotation to prevent drift
     kSlowModeMultiplier = 0.30   # 30% speed while slow mode held
 
 
@@ -28,14 +28,14 @@ class OIConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
     # Physical limits (what the robot is ALLOWED to do in teleop)
-    kMaxSpeedMps = 4.8          # meters per second
+    kMaxSpeedMps = 1          # meters per second
     kMaxAngularSpeedRps = 2 * math.pi   # radians per second
 
     # Slew rate limits — per axis (X and Y slewed independently)
     # Higher = more responsive, lower = smoother.
     # 4.0 is a good starting point; raise toward 6.0 if still sluggish.
-    kMagnitudeSlewRate = 4.0    # units/second per axis
-    kRotationalSlewRate = 3.0   # units/second
+    kMagnitudeSlewRate = 1.2    # units/second per axis
+    kRotationalSlewRate = 1.8   # units/second was 2.0
 
     # Slow mode — fraction of max speed applied when slow mode button is held
     kSlowModeMultiplier = 0.3   # 30% of full speed

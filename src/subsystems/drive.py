@@ -1,13 +1,6 @@
 """
 Team 1504 - DriveSubsystem
 MAXSwerve with NavX gyro + PathPlanner auto integration.
-
-Key improvements over old code:
-- Pose estimator (fuses vision + odometry) instead of plain odometry
-- PathPlanner auto registration
-- Field2d widget for SmartDashboard visualization
-- Clean periodic telemetry logging
-- Per-axis slew rate limiting (replaces brittle polar slew logic)
 """
 
 import math
@@ -17,11 +10,17 @@ import wpimath.kinematics
 import wpimath.estimator
 import wpimath.filter
 import wpimath.units
+import wpimath.system.plant
 import navx
 import commands2
 from wpilib import Field2d, SmartDashboard
 
-from src.constants import DriveConstants
+# PathPlanner
+from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig
+from pathplannerlib.controller import PPHolonomicDriveController
+
+from src.constants import DriveConstants, AutoConstants
 import src.swerve.swerve_module as swerve_module
 
 
@@ -66,8 +65,7 @@ class DriveSubsystem(commands2.Subsystem):
         # ── Gyro ──────────────────────────────────────────────────
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
 
-        # ── Pose estimator (replaces plain SwerveDrive4Odometry) ──
-        # Fuses wheel odometry + AprilTag vision measurements.
+        # ── Pose estimator ────────────────────────────────────────
         self.pose_estimator = wpimath.estimator.SwerveDrive4PoseEstimator(
             self.kinematics,
             self.gyro.getRotation2d(),
@@ -75,14 +73,55 @@ class DriveSubsystem(commands2.Subsystem):
             wpimath.geometry.Pose2d(),
         )
 
+        # ── PathPlanner AutoBuilder ───────────────────────────────
+        # Try to load robot config from the PathPlanner GUI settings file.
+        # If it doesn't exist yet (first run / no GUI file deployed), fall
+        # back to building the config manually from constants.
+        try:
+            config = RobotConfig.fromGUISettings()
+        except Exception:
+            config = RobotConfig(
+                massKG=AutoConstants.kRobotMassKg,
+                MOI=AutoConstants.kRobotMOI,
+                moduleConfig=ModuleConfig(
+                    wheelRadiusMeters=DriveConstants.kWheelDiameterMeters / 2,
+                    maxDriveVelocityMPS=DriveConstants.kMaxSpeedMps,
+                    wheelCOF=AutoConstants.kWheelCOF,
+                    # DCMotor.NEO() is the correct way to specify motor type
+                    driveMotor=wpimath.system.plant.DCMotor.NEO(1),
+                    driveCurrentLimit=DriveConstants.kDriveCurrentLimit,
+                    numMotors=1,
+                ),
+                moduleOffsets=[
+                    wpimath.geometry.Translation2d( DriveConstants.kWheelBase / 2,  DriveConstants.kTrackWidth / 2),
+                    wpimath.geometry.Translation2d( DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2),
+                    wpimath.geometry.Translation2d(-DriveConstants.kWheelBase / 2,  DriveConstants.kTrackWidth / 2),
+                    wpimath.geometry.Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2),
+                ],
+            )
+
+        AutoBuilder.configure(
+            self.get_pose,
+            self.reset_pose,
+            self._get_chassis_speeds,
+            # output must accept (ChassisSpeeds, DriveFeedforwards) —
+            # we ignore feedforwards since we're not using them yet
+            lambda speeds, feedforwards: self._drive_chassis_speeds(speeds),
+            PPHolonomicDriveController(
+                PIDConstants(AutoConstants.kPxController, 0.0, 0.0),
+                PIDConstants(AutoConstants.kPThetaController, 0.0, 0.0),
+            ),
+            config,
+            self._should_flip_path,
+            self,
+        )
+
         # ── Per-axis slew rate limiters ───────────────────────────
-        # Slewing X and Y independently avoids all quadrant-change
-        # dead zones that the old polar magnitude/direction approach had.
         self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
 
-        # ── Dashboard visualization ───────────────────────────────
+        # ── Dashboard ─────────────────────────────────────────────
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
 
@@ -112,15 +151,6 @@ class DriveSubsystem(commands2.Subsystem):
         field_relative: bool,
         rate_limit: bool = True,
     ) -> None:
-        """
-        Drive the robot.
-
-        :param x_speed:       Forward/back (-1 to 1, fraction of max)
-        :param y_speed:       Left/right (-1 to 1, fraction of max)
-        :param rot:           Rotation (-1 to 1, fraction of max)
-        :param field_relative: True = field-centric driving
-        :param rate_limit:    True = apply slew rate limiting
-        """
         if rate_limit:
             x_speed_commanded, y_speed_commanded = self._apply_rate_limit(x_speed, y_speed)
             rot = self._rot_limiter.calculate(rot)
@@ -150,7 +180,6 @@ class DriveSubsystem(commands2.Subsystem):
         self.rear_right.set_desired_state(rr)
 
     def set_x(self) -> None:
-        """Lock wheels in X pattern to resist being pushed."""
         self.front_left.set_desired_state(
             wpimath.kinematics.SwerveModuleState(0, wpimath.geometry.Rotation2d(math.pi / 4))
         )
@@ -168,12 +197,6 @@ class DriveSubsystem(commands2.Subsystem):
         self.drive(0.0, 0.0, 0.0, False, False)
 
     def reset_slew(self) -> None:
-        """
-        Reinitialize all slew rate limiters to a clean zero state.
-        Call at the start of teleop and whenever the drive command is
-        first scheduled — prevents stale values from auto/disabled
-        causing a jerk or drift on enable.
-        """
         self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
@@ -197,7 +220,6 @@ class DriveSubsystem(commands2.Subsystem):
         timestamp: float,
         std_devs: tuple[float, float, float] | None = None,
     ) -> None:
-        """Feed a vision pose estimate into the pose estimator."""
         if std_devs:
             self.pose_estimator.addVisionMeasurement(
                 pose, timestamp,
@@ -216,7 +238,37 @@ class DriveSubsystem(commands2.Subsystem):
         return self.gyro.getRotation2d()
 
     # ─────────────────────────────────────────────────────────────
-    # HELPERS
+    # PATHPLANNER HELPERS
+    # ─────────────────────────────────────────────────────────────
+    def _get_chassis_speeds(self) -> wpimath.kinematics.ChassisSpeeds:
+        """Current robot-relative chassis speeds from measured module states."""
+        return self.kinematics.toChassisSpeeds(
+            (
+                self.front_left.get_state(),
+                self.front_right.get_state(),
+                self.rear_left.get_state(),
+                self.rear_right.get_state(),
+            )
+        )
+
+    def _drive_chassis_speeds(self, speeds: wpimath.kinematics.ChassisSpeeds) -> None:
+        """Command chassis speeds directly — called by PathPlanner during auto."""
+        fl, fr, rl, rr = self.kinematics.toSwerveModuleStates(speeds)
+        wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
+            (fl, fr, rl, rr), DriveConstants.kMaxSpeedMps
+        )
+        self.front_left.set_desired_state(fl)
+        self.front_right.set_desired_state(fr)
+        self.rear_left.set_desired_state(rl)
+        self.rear_right.set_desired_state(rr)
+
+    def _should_flip_path(self) -> bool:
+        """Mirror paths to the red side of the field when on red alliance."""
+        alliance = wpilib.DriverStation.getAlliance()
+        return alliance == wpilib.DriverStation.Alliance.kRed
+
+    # ─────────────────────────────────────────────────────────────
+    # INTERNAL HELPERS
     # ─────────────────────────────────────────────────────────────
     def _get_module_positions(self):
         return (
@@ -227,12 +279,6 @@ class DriveSubsystem(commands2.Subsystem):
         )
 
     def _apply_rate_limit(self, x_speed: float, y_speed: float) -> tuple[float, float]:
-        """
-        Per-axis slew rate limiting.
-        Slewing X and Y independently means quadrant changes are handled
-        naturally — each axis just chases its target value. No angle
-        binning, no branches that zero out your input mid-motion.
-        """
         return (
             self._x_limiter.calculate(x_speed),
             self._y_limiter.calculate(y_speed),

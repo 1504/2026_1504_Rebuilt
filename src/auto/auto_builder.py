@@ -1,15 +1,29 @@
 """
 Team 1504 - AutoBuilder
-Builds autonomous command sequences by name.
+PathPlanner-based autonomous routines.
 
-PathPlanner is the preferred path-following library for 2026.
-Install: robotpy-pathplannerlib
+HOW TO ADD A NEW AUTO:
+1. Create the path in the PathPlanner GUI and save it to
+   src/main/deploy/pathplanner/paths/   (the GUI does this automatically)
+2. Create a named auto in the PathPlanner GUI (combines paths + events)
+   and save it to src/main/deploy/pathplanner/autos/
+3. Add an option to the chooser in RobotContainer._configure_auto_chooser()
+   using the exact name you gave the auto in the GUI.
 
-Each auto is a method that returns a commands2.Command.
-The chooser in RobotContainer selects by string key.
+HOW NAMED COMMANDS WORK:
+PathPlanner can trigger named commands at waypoints during a path.
+Register every command you want to trigger in _register_named_commands()
+below using the exact string you typed in the PathPlanner GUI.
+
+COORDINATE SYSTEM:
+PathPlanner uses WPILib field coordinates (blue alliance origin, +X away
+from blue driver station, +Y toward the left when viewed from above).
+Paths are automatically mirrored for red alliance via _should_flip_path()
+in drive.py.
 """
 
 import commands2
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 
 from src.subsystems.drive import DriveSubsystem
 from src.subsystems.shooter import ShooterSubsystem
@@ -18,82 +32,61 @@ from src.commands.shooter_commands import AutoShootCommand
 from src.commands.intake_commands import IntakeCommand
 
 
-class AutoBuilder:
+class PPAutoBuilder:
     def __init__(
         self,
         drive: DriveSubsystem,
         shooter: ShooterSubsystem,
         intake: IntakeSubsystem,
     ) -> None:
-        self._drive = drive
+        self._drive   = drive
         self._shooter = shooter
-        self._intake = intake
+        self._intake  = intake
 
-        # ── Register PathPlanner auto builder ─────────────────────
-        # Uncomment after adding pathplannerlib to requirements:
-        #
-        # from pathplannerlib.auto import AutoBuilder as PPAutoBuilder
-        # from pathplannerlib.config import HolonomicPathFollowerConfig, PIDConstants, ReplanningConfig
-        # from src.constants import DriveConstants, AutoConstants
-        #
-        # PPAutoBuilder.configureHolonomic(
-        #     self._drive.get_pose,
-        #     self._drive.reset_pose,
-        #     self._get_chassis_speeds,
-        #     self._drive_chassis_speeds,
-        #     HolonomicPathFollowerConfig(
-        #         PIDConstants(AutoConstants.kPxController, 0, 0),
-        #         PIDConstants(AutoConstants.kPThetaController, 0, 0),
-        #         DriveConstants.kMaxSpeedMps,
-        #         DriveConstants.kTrackWidth / 2,
-        #         ReplanningConfig(),
-        #     ),
-        #     self._drive,
-        # )
+        # Register every command that PathPlanner paths can trigger by name.
+        # The string here must match exactly what you typed in the GUI.
+        self._register_named_commands()
 
     # ─────────────────────────────────────────────────────────────
-    # PUBLIC: build by name
+    # NAMED COMMANDS
     # ─────────────────────────────────────────────────────────────
-    def build(self, name: str) -> commands2.Command:
-        routes = {
-            "two_piece_center":   self._two_piece_center,
-            "one_piece_mobility": self._one_piece_mobility,
-        }
-        builder = routes.get(name)
-        if builder is None:
-            return commands2.InstantCommand()
-        return builder()
-
-    # ─────────────────────────────────────────────────────────────
-    # AUTO ROUTINES
-    # ─────────────────────────────────────────────────────────────
-    def _one_piece_mobility(self) -> commands2.Command:
-        """Shoot preloaded piece, drive forward for mobility points."""
-        return commands2.SequentialCommandGroup(
+    def _register_named_commands(self) -> None:
+        """
+        Map string names → commands for PathPlanner event markers.
+        Add an entry here for every named command you place in the GUI.
+        """
+        NamedCommands.registerCommand(
+            "shoot",
             AutoShootCommand(self._shooter, target_rps=42.0, feed_duration_sec=1.0),
-            self._drive_seconds(2.0, x_speed=0.3),
         )
-
-    def _two_piece_center(self) -> commands2.Command:
-        """
-        Shoot preload, intake second piece, shoot again.
-        Replace drive_seconds with PathPlanner paths for accurate movement.
-        """
-        return commands2.SequentialCommandGroup(
-            AutoShootCommand(self._shooter, target_rps=42.0, feed_duration_sec=1.0),
-            commands2.ParallelRaceGroup(
-                IntakeCommand(self._intake, stop_on_fuel=True),
-                self._drive_seconds(1.5, x_speed=0.3),
+        NamedCommands.registerCommand(
+            "intake",
+            IntakeCommand(self._intake, stop_on_fuel=True),
+        )
+        NamedCommands.registerCommand(
+            "spinup",
+            commands2.InstantCommand(
+                lambda: self._shooter.set_velocity_rps(42.0), self._shooter
             ),
-            AutoShootCommand(self._shooter, target_rps=42.0, feed_duration_sec=1.0),
+        )
+        NamedCommands.registerCommand(
+            "stop_shooter",
+            commands2.InstantCommand(self._shooter.stop_all, self._shooter),
         )
 
     # ─────────────────────────────────────────────────────────────
-    # HELPERS
+    # BUILD BY NAME
     # ─────────────────────────────────────────────────────────────
-    def _drive_seconds(self, seconds: float, x_speed: float = 0.0, y_speed: float = 0.0) -> commands2.Command:
-        """Drive at fixed speed for a fixed duration. Rough — use PathPlanner for real paths."""
-        return commands2.RunCommand(
-            lambda: self._drive.drive(x_speed, y_speed, 0.0, False, False),
-            self._drive,
-        ).withTimeout(seconds)
+    def build(self, name: str | None) -> commands2.Command:
+        """
+        Build a PathPlanner auto by its GUI name.
+        Returns a do-nothing command if name is None or not found.
+        """
+        if not name:
+            return commands2.InstantCommand()
+
+        try:
+            return PathPlannerAuto(name)
+        except Exception as e:
+            print(f"[AutoBuilder] Could not load auto '{name}': {e}")
+            return commands2.InstantCommand()

@@ -1,9 +1,6 @@
 """
 Team 1504 Desperate Penguins - Constants
 2026 Season | FRC Game: Rebuilt
-
-All hardware IDs, tuning values, and physical measurements in one place.
-Group by subsystem so it's easy to find things.
 """
 
 import math
@@ -18,45 +15,35 @@ from rev import SparkMaxConfig
 class OIConstants:
     kDriverPort = 0
     kOperatorPort = 1
-    kDriveDeadband = 0.12
-    kRotDeadband = 0.18          # Slightly tighter on rotation to prevent drift
-    kSlowModeMultiplier = 0.30   # 30% speed while slow mode held
+    kDriveDeadband = 0.08
+    kRotDeadband = 0.12
+    kSlowModeMultiplier = 0.30
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    # Physical limits (what the robot is ALLOWED to do in teleop)
-    kMaxSpeedMps = 1          # meters per second
-    kMaxAngularSpeedRps = 2 * math.pi   # radians per second
+    kMaxSpeedMps = 1.5 # was 4.8
+    kMaxAngularSpeedRps = 2 * math.pi
 
-    # Slew rate limits — per axis (X and Y slewed independently)
-    # Higher = more responsive, lower = smoother.
-    # 4.0 is a good starting point; raise toward 6.0 if still sluggish.
-    kMagnitudeSlewRate = 1.2    # units/second per axis
-    kRotationalSlewRate = 1.8   # units/second was 2.0
+    kMagnitudeSlewRate  = 3.0 # 4 works well, slowed down for now, can try 6
+    kRotationalSlewRate = 2.0 # 3 works well, slowed down for now
+    kSlowModeMultiplier = 0.3
 
-    # Slow mode — fraction of max speed applied when slow mode button is held
-    kSlowModeMultiplier = 0.3   # 30% of full speed
-
-    # Chassis geometry (center-to-center of wheels, in meters)
     kTrackWidth = 0.5715
     kWheelBase  = 0.5715
 
-    # Angular offsets of each module relative to chassis (radians)
     kFrontLeftChassisOffset  = -math.pi / 2
     kFrontRightChassisOffset = 0.0
     kRearLeftChassisOffset   = math.pi
     kRearRightChassisOffset  = math.pi / 2
 
-    # Absolute encoder offsets (tuned per robot - check with REV Hardware Client)
     kFrontLeftEncoderOffset  = 0.8546
     kFrontRightEncoderOffset = 0.665
     kRearLeftEncoderOffset   = 0.803
     kRearRightEncoderOffset  = 0.1814
 
-    # ── CAN IDs ───────────────────────────────────────────────────
     kFrontLeftDriveId  = 5
     kFrontLeftTurnId   = 6
     kFrontRightDriveId = 7
@@ -66,22 +53,20 @@ class DriveConstants:
     kRearRightDriveId  = 1
     kRearRightTurnId   = 2
 
-    # ── Gearing / conversion ──────────────────────────────────────
-    kDrivePinionTeeth = 14   # 12T / 13T / 14T options on MAXSwerve
-    kDriveMotorFreeSpeedRps = 5676.0 / 60  # NEO free speed
+    kDrivePinionTeeth = 14
+    kDriveMotorFreeSpeedRps = 5676.0 / 60
     kWheelDiameterMeters = 0.0762
     kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
     kDriveMotorReduction = (45.0 * 22) / (kDrivePinionTeeth * 15)
     kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction
 
-    kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction  # meters
-    kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0                # m/s
+    kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction
+    kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0
 
-    kTurnEncoderPositionFactor = 2 * math.pi   # radians
+    kTurnEncoderPositionFactor = 2 * math.pi
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
     kTurnEncoderInverted = True
 
-    # ── PID (SparkMax onboard) ─────────────────────────────────────
     kDriveP  = 0.04
     kDriveI  = 0.0
     kDriveD  = 0.0
@@ -97,41 +82,31 @@ class DriveConstants:
     kTurnMinOutput  = -1.0
     kTurnMaxOutput  =  1.0
 
-    # Brake mode on both drive and turn:
-    # - Drive brake: robot decelerates quickly and holds position when input stops
-    # - Turn brake: wheels hold their angle instead of drifting
     kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
     kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
 
-    kDriveCurrentLimit = 50   # Amps
-    kTurnCurrentLimit  = 20   # Amps
+    kDriveCurrentLimit = 50
+    kTurnCurrentLimit  = 20
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SHOOTER  (Phoenix6 TalonFX — Kraken X60 or Falcon 500)
+# SHOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 class ShooterConstants:
-    kShooterMotor1Id = 20   # TalonFX CAN ID
-    kShooterMotor2Id = 21   # TalonFX CAN ID (follows / opposite polarity)
-    kFeederMotorId   = 10   # SparkMax CAN ID (NEO 550 or similar)
+    kShooterMotor1Id = 20
+    kShooterMotor2Id = 21
+    kFeederMotorId   = 10
 
-    # Velocity PID (slot 0 on TalonFX — tuned in Phoenix Tuner X)
     kShooterP  = 0.5
     kShooterI  = 0.0
     kShooterD  = 0.0
-    kShooterKv = 0.12   # V per RPS - start here, tune with Tuner X
+    kShooterKv = 0.12
 
-    # Tolerance for "at speed" check (RPS)
     kVelocityToleranceRps = 2.0
-
-    # Feeder duty cycle
     kFeederSpeed = 0.6
+    kFeederCurrentLimit = 20
+    kFlywheelCurrentLimit = 60
 
-    kFeederCurrentLimit = 20   # Amps — NEO 1.1
-    kFlywheelCurrentLimit = 60  # Amps — NEO Vortex (SparkFlex)
-
-    # Distance → shooter RPS lookup table
-    # Format: (distance_meters, target_rps)
     kShooterTable = [
         (1.5,  35.0),
         (2.0,  40.0),
@@ -145,21 +120,20 @@ class ShooterConstants:
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-    kLeftMotorId  = 12   # SparkMax
-    kRightMotorId = 11   # SparkMax
-    kFuelSensorChannel = 9   # DIO
+    kLeftMotorId  = 12
+    kRightMotorId = 11
+    kFuelSensorChannel = 9
 
     kIntakeSpeed = 0.8
     kReverseSpeed = -0.5
-
-    kCurrentLimit = 30  # Amps
+    kCurrentLimit = 30
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
 class ClimberConstants:
-    kClimberMotorId = 30   # TalonFX or SparkMax - update to match hardware
+    kClimberMotorId = 30
     kClimbSpeed = 0.8
     kDescendSpeed = -0.5
     kCurrentLimit = 40
@@ -182,22 +156,30 @@ class VisionConstants:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# AUTONOMOUS
+# AUTONOMOUS  (PathPlanner)
 # ─────────────────────────────────────────────────────────────────────────────
 class AutoConstants:
-    kMaxSpeedMps = 3.0
-    kMaxAccelMps2 = 2.0
-    kMaxAngularSpeedRps = math.pi
-    kMaxAngularAccelRps2 = math.pi
+    # Translation PID — how aggressively PathPlanner corrects X/Y error.
+    # Start at 5.0, increase if the robot lags behind the path.
+    kPxController = 5.0
+    kPyController = 5.0   # must equal kPxController for holonomic
 
-    kPxController = 0.5
-    kPyController = 0.5
-    kPThetaController = 0.5
+    # Rotation PID — how aggressively PathPlanner corrects heading error.
+    # Start at 5.0, increase if the robot's heading drifts during paths.
+    kPThetaController = 5.0
 
+    # PathPlanner path speed limits (override per-path in the GUI if needed)
+    kMaxSpeedMps   = 3.0
+    kMaxAccelMps2  = 2.0
 
-# ─────────────────────────────────────────────────────────────────────────────
-# LEDs
-# ─────────────────────────────────────────────────────────────────────────────
-class LEDConstants:
-    kLEDPort = 0      # PWM port on roboRIO
-    kLEDLength = 60   # Number of LEDs in strip
+    # Robot physical properties — used for PathPlanner dynamics model.
+    # kRobotMassKg: weigh your robot (frame + battery + mechanisms).
+    # kRobotMOI:    moment of inertia — estimate = 0.5 * mass * (half_diagonal)^2
+    #               half_diagonal for 0.5715 m square chassis ≈ 0.404 m
+    #               So MOI ≈ 0.5 * 55 * 0.404^2 ≈ 4.5  (tune from there)
+    kRobotMassKg = 55.0   # kg — update after weighing
+    kRobotMOI    = 4.5    # kg·m² — update after measuring or using SysId
+
+    # Coefficient of friction between wheel and carpet.
+    # 1.0 is a common starting value for colsons/neoprene on FRC carpet.
+    kWheelCOF = 1.0

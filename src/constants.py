@@ -15,8 +15,8 @@ from rev import SparkMaxConfig
 class OIConstants:
     kDriverPort = 0
     kOperatorPort = 1
-    kDriveDeadband = 0.08
-    kRotDeadband = 0.12
+    kDriveDeadband = 0.13
+    kRotDeadband = 0.16
     kSlowModeMultiplier = 0.30
 
 
@@ -24,7 +24,7 @@ class OIConstants:
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    kMaxSpeedMps = 1.5 # was 4.8
+    kMaxSpeedMps = 0.8 # was 4.8
     kMaxAngularSpeedRps = 2 * math.pi
 
     kMagnitudeSlewRate  = 3.0 # 4 works well, slowed down for now, can try 6

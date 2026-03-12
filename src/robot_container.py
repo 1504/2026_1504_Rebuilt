@@ -13,7 +13,6 @@ from src.subsystems.drive import DriveSubsystem
 from src.subsystems.shooter import ShooterSubsystem
 from src.subsystems.intake import IntakeSubsystem
 from src.subsystems.climber import ClimberSubsystem
-#from src.subsystems.leds import LEDSubsystem #later thingy
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
 
@@ -26,18 +25,17 @@ import src.commands.climb_commands as climb_cmds
 class RobotContainer:
     def __init__(self) -> None:
         # ── Subsystems ────────────────────────────────────────────
-        self.drive   = DriveSubsystem()   # registers PathPlanner AutoBuilder
+        self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
         self.intake  = IntakeSubsystem()
         self.climber = ClimberSubsystem()
-#        self.leds    = LEDSubsystem()  #later thingy
         self.vision  = LimelightVision(self.drive)
 
         # ── Controllers ───────────────────────────────────────────
         self.driver   = commands2.button.CommandXboxController(OIConstants.kDriverPort)
         self.operator = commands2.button.CommandXboxController(OIConstants.kOperatorPort)
 
-        # ── Default commands ──────────────────────────────────────
+        # ── Default command: field-relative drive ─────────────────
         self.drive.setDefaultCommand(
             drive_cmds.TeleopDriveCommand(
                 self.drive,
@@ -49,8 +47,7 @@ class RobotContainer:
             )
         )
 
-        # ── Auto builder (must be created AFTER DriveSubsystem so
-        #    PathPlanner AutoBuilder.configure() has already run) ──
+        # ── Auto builder ──────────────────────────────────────────
         self.auto_builder = PPAutoBuilder(self.drive, self.shooter, self.intake)
         self._configure_auto_chooser()
 
@@ -67,6 +64,7 @@ class RobotContainer:
           Right stick X   → rotate
           LB              → slow mode (hold)
           RB              → set X / lock wheels
+          Right trigger   → robot-relative drive (hold)
           Start           → reset gyro heading
           Back            → vision snap to target
 
@@ -84,6 +82,19 @@ class RobotContainer:
         self.driver.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         self.driver.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         self.driver.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
+
+        # Robot-relative drive while right trigger is held.
+        # Uses the same sticks as normal driving — just ignores field heading.
+        # Useful for precise alignment maneuvers against a field element.
+        self.driver.rightTrigger(0.5).whileTrue(
+            drive_cmds.RobotRelativeDriveCommand(
+                self.drive,
+                lambda: -self.driver.getLeftY(),
+                lambda: -self.driver.getLeftX(),
+                lambda: -self.driver.getRightX(),
+                slow_mode_supplier=lambda: self.driver.getHID().getLeftBumper(),
+            )
+        )
 
         # ── Operator ──────────────────────────────────────────────
         self.operator.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))
@@ -104,21 +115,14 @@ class RobotContainer:
     # AUTONOMOUS
     # ─────────────────────────────────────────────────────────────
     def _configure_auto_chooser(self) -> None:
-        """
-        Add every PathPlanner auto name here.
-        The string must match the filename in deploy/pathplanner/autos/
-        exactly (without the .auto extension).
-        """
         self.auto_chooser = wpilib.SendableChooser()
         self.auto_chooser.setDefaultOption("Do Nothing", None)
 
-        # ── Add your PathPlanner autos here ───────────────────────
-        self.auto_chooser.addOption("Right",    "2PieceCenter")
-        self.auto_chooser.addOption("Left",  "1PieceMobility")
-        self.auto_chooser.addOption("Center",    "3PieceCenter")
-        self.auto_chooser.addOption("Easy auton", "simple")
-        self.auto_chooser.addOption("showoff", "showoff")
-        # Add more as you create them in the PathPlanner GUI
+        self.auto_chooser.addOption("Right",       "2PieceCenter")
+        self.auto_chooser.addOption("Left",        "1PieceMobility")
+        self.auto_chooser.addOption("Center",      "3PieceCenter")
+        self.auto_chooser.addOption("Easy auton",  "simple")
+        self.auto_chooser.addOption("showoff",     "showoff")
 
         SmartDashboard.putData("Auto Mode", self.auto_chooser)
 

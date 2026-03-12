@@ -85,8 +85,14 @@ class DriveConstants:
     kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
     kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
 
-    kDriveCurrentLimit = 50
-    kTurnCurrentLimit  = 20
+    kDriveCurrentLimit = 50 #Amps
+    kTurnCurrentLimit  = 20 #Amps
+
+    k_start_x = 241
+    k_start_y = 158
+
+    k_start_x = 241
+    k_start_y = 158
 
 
 # ─────────────────────────────────────────────────────────────────────────────

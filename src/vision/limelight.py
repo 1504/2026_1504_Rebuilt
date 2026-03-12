@@ -28,10 +28,11 @@ class LimelightVision(commands2.Subsystem):
         self._table = self._nt.getTable(VisionConstants.kLimelightName)
 
         # Cached NT subscribers for efficiency
-        self._botpose_sub = self._table.getDoubleArrayTopic("botpose_wpiblue").subscribe([])
-        self._tv_sub = self._table.getIntegerTopic("tv").subscribe(0)
-        self._tid_sub = self._table.getIntegerTopic("tid").subscribe(-1)
-        self._tag_count_sub = self._table.getDoubleTopic("botpose_tagcount").subscribe(0)
+        self._botpose_sub  = self._table.getDoubleArrayTopic("botpose_wpiblue").subscribe([])
+        self._tv_sub       = self._table.getIntegerTopic("tv").subscribe(0)
+        self._tid_sub      = self._table.getIntegerTopic("tid").subscribe(-1)
+        # FIXED: was getDoubleTopic — botpose_tagcount is published as an integer
+        self._tag_count_sub = self._table.getIntegerTopic("botpose_tagcount").subscribe(0)
 
     def periodic(self) -> None:
         # No valid target → skip
@@ -55,7 +56,7 @@ class LimelightVision(commands2.Subsystem):
 
         timestamp = wpilib.Timer.getFPGATimestamp() - (latency_ms / 1000.0)
 
-        tag_count = int(self._tag_count_sub.get())
+        tag_count = self._tag_count_sub.get()
         std_devs = (
             VisionConstants.kMultiTagStdDevs
             if tag_count >= 2

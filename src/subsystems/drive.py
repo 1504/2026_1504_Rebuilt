@@ -71,17 +71,19 @@ class DriveSubsystem(commands2.Subsystem):
             self.kinematics,
             self.gyro.getRotation2d(),
             self._get_module_positions(),
-            initialPose=wpimath.geometry.Pose2d(DriveConstants.k_start_x, DriveConstants.k_start_y,
-                                    self.gyro.getRotation2d())
+            initialPose=wpimath.geometry.Pose2d(
+                DriveConstants.k_start_x,
+                DriveConstants.k_start_y,
+                self.gyro.getRotation2d(),
+            ),
         )
 
         # ── PathPlanner AutoBuilder ───────────────────────────────
-        # Try to load robot config from the PathPlanner GUI settings file.
-        # If it doesn't exist yet (first run / no GUI file deployed), fall
-        # back to building the config manually from constants.
+        # FIXED: print the actual exception so config problems are visible
         try:
             config = RobotConfig.fromGUISettings()
-        except Exception:
+        except Exception as e:
+            print(f"[Drive] GUI config load failed ({e}), using constants fallback")
             config = RobotConfig(
                 massKG=AutoConstants.kRobotMassKg,
                 MOI=AutoConstants.kRobotMOI,
@@ -89,7 +91,6 @@ class DriveSubsystem(commands2.Subsystem):
                     wheelRadiusMeters=DriveConstants.kWheelDiameterMeters / 2,
                     maxDriveVelocityMPS=DriveConstants.kMaxSpeedMps,
                     wheelCOF=AutoConstants.kWheelCOF,
-                    # DCMotor.NEO() is the correct way to specify motor type
                     driveMotor=wpimath.system.plant.DCMotor.NEO(1),
                     driveCurrentLimit=DriveConstants.kDriveCurrentLimit,
                     numMotors=1,
@@ -106,8 +107,6 @@ class DriveSubsystem(commands2.Subsystem):
             self.get_pose,
             self.reset_pose,
             self._get_chassis_speeds,
-            # output must accept (ChassisSpeeds, DriveFeedforwards) —
-            # we ignore feedforwards since we're not using them yet
             lambda speeds, feedforwards: self._drive_chassis_speeds(speeds),
             PPHolonomicDriveController(
                 PIDConstants(AutoConstants.kPxController, 0.0, 0.0),
@@ -199,9 +198,10 @@ class DriveSubsystem(commands2.Subsystem):
         self.drive(0.0, 0.0, 0.0, False, False)
 
     def reset_slew(self) -> None:
-        self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
-        self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
-        self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
+        # FIXED: reset to 0 instead of recreating objects — avoids GC churn
+        self._x_limiter.reset(0)
+        self._y_limiter.reset(0)
+        self._rot_limiter.reset(0)
 
     # ─────────────────────────────────────────────────────────────
     # POSE / ODOMETRY
@@ -232,13 +232,18 @@ class DriveSubsystem(commands2.Subsystem):
 
     def zero_heading(self) -> None:
         self.gyro.reset()
-    def get_chassisSpeeds(self) -> ChassisSpeeds:
-        return self.kinematics.toChassisSpeeds(self.front_left.get_state,self.front_right.get_state,self.rear_left.get_state,self.rear_right.get_state)
+
     def get_heading_degrees(self) -> float:
         return self.gyro.getAngle()
 
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
         return self.gyro.getRotation2d()
+
+    # FIXED: was calling get_state without () — passed method refs instead of values.
+    # Also removed the duplicate public get_chassisSpeeds that had the same bug;
+    # callers should use _get_chassis_speeds() directly.
+    def get_chassis_speeds(self) -> ChassisSpeeds:
+        return self._get_chassis_speeds()
 
     # ─────────────────────────────────────────────────────────────
     # PATHPLANNER HELPERS

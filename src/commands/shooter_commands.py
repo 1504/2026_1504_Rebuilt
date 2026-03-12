@@ -3,6 +3,7 @@ Team 1504 - Shooter Commands
 Each command is small and focused. Compose them in auto routines as needed.
 """
 
+import wpilib
 import commands2
 from src.subsystems.shooter import ShooterSubsystem
 from src.constants import ShooterConstants
@@ -80,6 +81,10 @@ class ShootCommand(commands2.Command):
 class AutoShootCommand(commands2.Command):
     """
     Autonomous shoot: spin up, wait for speed, feed for duration, then finish.
+
+    FIXED: previously incremented a float counter by 0.02 each loop, which
+    drifts whenever the loop runs late (brownout, CAN delays, etc.).
+    Now uses wpilib.Timer for accurate wall-clock measurement.
     """
 
     def __init__(
@@ -92,28 +97,30 @@ class AutoShootCommand(commands2.Command):
         self._shooter = shooter
         self._target_rps = target_rps
         self._feed_duration = feed_duration_sec
-        self._timer = 0.0
         self._feeding = False
+        self._timer = wpilib.Timer()
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
         self._shooter.set_velocity_rps(self._target_rps)
         self._shooter.stop_feeder()
-        self._timer = 0.0
         self._feeding = False
+        self._timer.reset()
+        self._timer.stop()
 
     def execute(self) -> None:
         if self._shooter.is_at_speed():
             if not self._feeding:
                 self._feeding = True
-                self._timer = 0.0
+                self._timer.reset()
+                self._timer.start()
             self._shooter.run_feeder()
-            self._timer += 0.02  # 50 Hz loop
         else:
             self._shooter.stop_feeder()
 
     def end(self, interrupted: bool) -> None:
+        self._timer.stop()
         self._shooter.stop_all()
 
     def isFinished(self) -> bool:
-        return self._feeding and self._timer >= self._feed_duration
+        return self._feeding and self._timer.hasElapsed(self._feed_duration)

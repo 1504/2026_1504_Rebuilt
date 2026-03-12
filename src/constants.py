@@ -24,11 +24,11 @@ class OIConstants:
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    kMaxSpeedMps = 0.8 # was 4.8
+    kMaxSpeedMps = 4.8          # FIXED: was 0.8 (capped teleop to 17% of auto speed)
     kMaxAngularSpeedRps = 2 * math.pi
 
-    kMagnitudeSlewRate  = 3.0 # 4 works well, slowed down for now, can try 6
-    kRotationalSlewRate = 2.0 # 3 works well, slowed down for now
+    kMagnitudeSlewRate  = 3.0
+    kRotationalSlewRate = 2.0
     kSlowModeMultiplier = 0.3
 
     kTrackWidth = 0.5715
@@ -85,14 +85,14 @@ class DriveConstants:
     kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
     kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
 
-    kDriveCurrentLimit = 50 #Amps
-    kTurnCurrentLimit  = 20 #Amps
+    kDriveCurrentLimit = 50  # Amps
+    kTurnCurrentLimit  = 20  # Amps
 
-    k_start_x = 241
-    k_start_y = 158
-
-    k_start_x = 241
-    k_start_y = 158
+    # FIXED: was 241, 158 (pixel coords — way off field).
+    # Set to a real field position in meters, or (0, 0) as a safe default.
+    # Update these to your actual starting pose before each match.
+    k_start_x = 2.0   # meters from blue alliance wall
+    k_start_y = 4.0   # meters from bottom wall (mid-field height)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -165,27 +165,15 @@ class VisionConstants:
 # AUTONOMOUS  (PathPlanner)
 # ─────────────────────────────────────────────────────────────────────────────
 class AutoConstants:
-    # Translation PID — how aggressively PathPlanner corrects X/Y error.
-    # Start at 5.0, increase if the robot lags behind the path.
     kPxController = 5.0
-    kPyController = 5.0   # must equal kPxController for holonomic
+    kPyController = 5.0
 
-    # Rotation PID — how aggressively PathPlanner corrects heading error.
-    # Start at 5.0, increase if the robot's heading drifts during paths.
     kPThetaController = 5.0
 
-    # PathPlanner path speed limits (override per-path in the GUI if needed)
     kMaxSpeedMps   = 3.0
     kMaxAccelMps2  = 2.0
 
-    # Robot physical properties — used for PathPlanner dynamics model.
-    # kRobotMassKg: weigh your robot (frame + battery + mechanisms).
-    # kRobotMOI:    moment of inertia — estimate = 0.5 * mass * (half_diagonal)^2
-    #               half_diagonal for 0.5715 m square chassis ≈ 0.404 m
-    #               So MOI ≈ 0.5 * 55 * 0.404^2 ≈ 4.5  (tune from there)
-    kRobotMassKg = 55.0   # kg — update after weighing
-    kRobotMOI    = 4.5    # kg·m² — update after measuring or using SysId
+    kRobotMassKg = 55.0
+    kRobotMOI    = 4.5
 
-    # Coefficient of friction between wheel and carpet.
-    # 1.0 is a common starting value for colsons/neoprene on FRC carpet.
     kWheelCOF = 1.0

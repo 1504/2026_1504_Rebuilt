@@ -4,6 +4,7 @@ Team 1504 - Drive Commands
 
 from typing import Callable
 import commands2
+import wpilib
 
 from src.subsystems.drive import DriveSubsystem
 from src.constants import OIConstants, DriveConstants
@@ -78,7 +79,14 @@ class ResetHeadingCommand(commands2.InstantCommand):
 
 
 class VisionSnapCommand(commands2.Command):
-    """Rotate to align with AprilTag target. Placeholder — tune once vision is working."""
+    """
+    Rotate to align with AprilTag target.
+
+    FIXED: was silently holding the drive requirement while doing nothing
+    (empty execute body). Now logs a warning on init and immediately finishes
+    so it doesn't block the driver. Implement the PID loop here once vision
+    tx values are validated on the real robot.
+    """
 
     def __init__(self, drive: DriveSubsystem, vision) -> None:
         super().__init__()
@@ -86,12 +94,23 @@ class VisionSnapCommand(commands2.Command):
         self._vision = vision
         self.addRequirements(drive)
 
+    def initialize(self) -> None:
+        wpilib.reportWarning(
+            "[VisionSnapCommand] Not yet implemented — command will exit immediately.",
+            printTrace=False,
+        )
+
     def execute(self) -> None:
-        # TODO: get tx from vision, close-loop on rotation
+        # TODO: closed-loop on self._vision.get_tx() once validated
+        # Example skeleton:
+        #   tx = self._vision.get_tx()
+        #   rot_output = -tx / 27.0  # rough proportional, replace with PID
+        #   self._drive.drive(0.0, 0.0, rot_output, True)
         pass
 
     def isFinished(self) -> bool:
-        return False
+        # Return True immediately until implemented so driver isn't locked out
+        return True
 
 
 def _apply_deadband(value: float, deadband: float) -> float:

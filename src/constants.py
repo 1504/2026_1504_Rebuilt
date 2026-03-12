@@ -24,7 +24,7 @@ class OIConstants:
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    kMaxSpeedMps = 4.8          # FIXED: was 0.8 (capped teleop to 17% of auto speed)
+    kMaxSpeedMps = 1.5          # capped change to 6 when ready.
     kMaxAngularSpeedRps = 2 * math.pi
 
     kMagnitudeSlewRate  = 3.0
@@ -170,7 +170,7 @@ class AutoConstants:
 
     kPThetaController = 5.0
 
-    kMaxSpeedMps   = 3.0
+    kMaxSpeedMps   = 1.5 #change to 3 when ready
     kMaxAccelMps2  = 2.0
 
     kRobotMassKg = 55.0

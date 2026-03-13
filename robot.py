@@ -1,8 +1,6 @@
 """
 Team 1504 Desperate Penguins - 2026 Robot Code
 FRC Game: Rebuilt
-
-Entry point for the robot program.
 """
 
 import wpilib
@@ -12,17 +10,11 @@ from src.robot_container import RobotContainer
 
 
 class Robot(commands2.TimedCommandRobot):
-    """
-    Main robot class. Keeps robotInit lean - all subsystem/command
-    setup lives in RobotContainer (6328-style separation of concerns).
-    """
-
     def robotInit(self) -> None:
         self.container = RobotContainer()
         self.autonomous_command = None
 
     def robotPeriodic(self) -> None:
-        # Runs the scheduler every loop (includes subsystem periodics + commands)
         commands2.CommandScheduler.getInstance().run()
 
     def disabledInit(self) -> None:
@@ -40,7 +32,6 @@ class Robot(commands2.TimedCommandRobot):
         pass
 
     def teleopInit(self) -> None:
-        # Cancel auto when teleop starts (safety)
         if self.autonomous_command:
             self.autonomous_command.cancel()
         self.container.configure_teleop()
@@ -53,6 +44,16 @@ class Robot(commands2.TimedCommandRobot):
 
     def testPeriodic(self) -> None:
         pass
+
+    # ─────────────────────────────────────────────────────────────
+    # SIMULATION  (only runs when using the sim GUI)
+    # ─────────────────────────────────────────────────────────────
+    def simulationPeriodic(self) -> None:
+        """
+        Called every loop in simulation mode.
+        Feeds integrated gyro heading, physics model updates, etc.
+        """
+        self.container.update_sim()
 
 
 if __name__ == "__main__":

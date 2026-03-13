@@ -1,11 +1,11 @@
 """
 Team 1504 Desperate Penguins - RobotContainer
-Inspired by 6328 Mechanical Advantage's architecture.
+IO layer injected here — subsystems are hardware-agnostic.
 """
 
+import wpilib
 import commands2
 import commands2.button
-import wpilib
 from wpilib import SmartDashboard
 
 from src.constants import OIConstants
@@ -21,13 +21,25 @@ import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
 
+# IO implementations
+from src.io.shooter_io import ShooterIOReal, ShooterIOSim
+from src.io.intake_io import IntakeIOReal, IntakeIOSim
+from src.io.gyro_io import GyroIONavX, GyroIOSim
+
 
 class RobotContainer:
     def __init__(self) -> None:
+        is_real = wpilib.RobotBase.isReal()
+
+        # ── IO selection: Real on robot, Sim in simulation ────────
+        shooter_io = ShooterIOReal() if is_real else ShooterIOSim()
+        intake_io  = IntakeIOReal()  if is_real else IntakeIOSim()
+        gyro_io    = GyroIONavX()    if is_real else GyroIOSim()
+
         # ── Subsystems ────────────────────────────────────────────
-        self.drive   = DriveSubsystem()
-        self.shooter = ShooterSubsystem()
-        self.intake  = IntakeSubsystem()
+        self.drive   = DriveSubsystem(gyro_io)
+        self.shooter = ShooterSubsystem(shooter_io)
+        self.intake  = IntakeSubsystem(intake_io)
         self.climber = ClimberSubsystem()
         self.vision  = LimelightVision(self.drive)
 
@@ -54,38 +66,31 @@ class RobotContainer:
         # ── Teleop bindings ───────────────────────────────────────
         self.configure_teleop_bindings()
 
+        # ── Sim-only: expose intake IO for sim triggers ───────────
+        if not is_real:
+            self._intake_io_sim: IntakeIOSim = intake_io  # type: ignore[assignment]
+            self._gyro_io_sim: GyroIOSim     = gyro_io    # type: ignore[assignment]
+
+    # ─────────────────────────────────────────────────────────────
+    # SIM HELPERS  (called from robot.py simulationPeriodic)
+    # ─────────────────────────────────────────────────────────────
+    def update_sim(self) -> None:
+        """
+        Feed sim-specific state back each loop.
+        Only called when RobotBase.isSimulation() is True.
+        """
+        if hasattr(self, "_gyro_io_sim"):
+            self._gyro_io_sim.update_sim_state(self.drive.get_chassis_speeds())
+
     # ─────────────────────────────────────────────────────────────
     # TELEOP BINDINGS
     # ─────────────────────────────────────────────────────────────
     def configure_teleop_bindings(self) -> None:
-        """
-        Driver (port 0):
-          Left stick      → translate
-          Right stick X   → rotate
-          LB              → slow mode (hold)
-          RB              → set X / lock wheels
-          Right trigger   → robot-relative drive (hold)
-          Start           → reset gyro heading
-          Back            → vision snap to target
-
-        Operator (port 1):
-          A               → shoot (spin up + feed)
-          X               → feed only
-          Y               → spin up only
-          B               → intake
-          Left bumper     → reverse intake
-          Right bumper    → climb up
-          Left trigger    → climb down
-        """
-
         # ── Driver ────────────────────────────────────────────────
         self.driver.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         self.driver.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         self.driver.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
 
-        # Robot-relative drive while right trigger is held.
-        # Uses the same sticks as normal driving — just ignores field heading.
-        # Useful for precise alignment maneuvers against a field element.
         self.driver.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(
                 self.drive,
@@ -108,7 +113,6 @@ class RobotContainer:
         ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
     def configure_teleop(self) -> None:
-        """Called by teleopInit — resets slew so the robot doesn't jerk on enable."""
         self.drive.reset_slew()
 
     # ─────────────────────────────────────────────────────────────
@@ -117,13 +121,11 @@ class RobotContainer:
     def _configure_auto_chooser(self) -> None:
         self.auto_chooser = wpilib.SendableChooser()
         self.auto_chooser.setDefaultOption("Do Nothing", None)
-
-        self.auto_chooser.addOption("Right",       "2PieceCenter")
-        self.auto_chooser.addOption("Left",        "1PieceMobility")
-        self.auto_chooser.addOption("Center",      "3PieceCenter")
-        self.auto_chooser.addOption("Easy auton",  "simple")
-        self.auto_chooser.addOption("showoff",     "showoff")
-
+        self.auto_chooser.addOption("Right",      "2PieceCenter")
+        self.auto_chooser.addOption("Left",       "1PieceMobility")
+        self.auto_chooser.addOption("Center",     "3PieceCenter")
+        self.auto_chooser.addOption("Easy auton", "simple")
+        self.auto_chooser.addOption("showoff",    "showoff")
         SmartDashboard.putData("Auto Mode", self.auto_chooser)
 
     def get_autonomous_command(self) -> commands2.Command | None:

@@ -1,6 +1,6 @@
 """
-Team 1504 - DriveSubsystem
-MAXSwerve with NavX gyro + PathPlanner auto integration.
+Team 1504 - DriveSubsystem (IO-layer version)
+Gyro access goes through GyroIO; everything else unchanged.
 """
 
 import math
@@ -12,47 +12,41 @@ import wpimath.estimator
 import wpimath.filter
 import wpimath.units
 import wpimath.system.plant
-import navx
 import commands2
 from wpilib import Field2d, SmartDashboard
 
-# PathPlanner
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
 from src.constants import DriveConstants, AutoConstants
+from src.io.gyro_io import GyroIO, GyroInputs
 import src.swerve.swerve_module as swerve_module
 
 
 class DriveSubsystem(commands2.Subsystem):
-    def __init__(self) -> None:
+    def __init__(self, gyro_io: GyroIO) -> None:
         super().__init__()
+
+        self._gyro_io = gyro_io
+        self._gyro_inputs = GyroInputs()
 
         # ── Swerve modules ────────────────────────────────────────
         self.front_left  = swerve_module.SwerveModule(
-            DriveConstants.kFrontLeftDriveId,
-            DriveConstants.kFrontLeftTurnId,
-            DriveConstants.kFrontLeftChassisOffset,
-            DriveConstants.kFrontLeftEncoderOffset,
+            DriveConstants.kFrontLeftDriveId,  DriveConstants.kFrontLeftTurnId,
+            DriveConstants.kFrontLeftChassisOffset, DriveConstants.kFrontLeftEncoderOffset,
         )
         self.front_right = swerve_module.SwerveModule(
-            DriveConstants.kFrontRightDriveId,
-            DriveConstants.kFrontRightTurnId,
-            DriveConstants.kFrontRightChassisOffset,
-            DriveConstants.kFrontRightEncoderOffset,
+            DriveConstants.kFrontRightDriveId, DriveConstants.kFrontRightTurnId,
+            DriveConstants.kFrontRightChassisOffset, DriveConstants.kFrontRightEncoderOffset,
         )
         self.rear_left   = swerve_module.SwerveModule(
-            DriveConstants.kRearLeftDriveId,
-            DriveConstants.kRearLeftTurnId,
-            DriveConstants.kRearLeftChassisOffset,
-            DriveConstants.kRearLeftEncoderOffset,
+            DriveConstants.kRearLeftDriveId,   DriveConstants.kRearLeftTurnId,
+            DriveConstants.kRearLeftChassisOffset,  DriveConstants.kRearLeftEncoderOffset,
         )
         self.rear_right  = swerve_module.SwerveModule(
-            DriveConstants.kRearRightDriveId,
-            DriveConstants.kRearRightTurnId,
-            DriveConstants.kRearRightChassisOffset,
-            DriveConstants.kRearRightEncoderOffset,
+            DriveConstants.kRearRightDriveId,  DriveConstants.kRearRightTurnId,
+            DriveConstants.kRearRightChassisOffset, DriveConstants.kRearRightEncoderOffset,
         )
 
         # ── Kinematics ────────────────────────────────────────────
@@ -63,23 +57,20 @@ class DriveSubsystem(commands2.Subsystem):
             wpimath.geometry.Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2),
         )
 
-        # ── Gyro ──────────────────────────────────────────────────
-        self.gyro = navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
-
         # ── Pose estimator ────────────────────────────────────────
+        # Gyro inputs not populated yet — use identity rotation for init
         self.pose_estimator = wpimath.estimator.SwerveDrive4PoseEstimator(
             self.kinematics,
-            self.gyro.getRotation2d(),
+            wpimath.geometry.Rotation2d(),
             self._get_module_positions(),
             initialPose=wpimath.geometry.Pose2d(
                 DriveConstants.k_start_x,
                 DriveConstants.k_start_y,
-                self.gyro.getRotation2d(),
+                wpimath.geometry.Rotation2d(),
             ),
         )
 
         # ── PathPlanner AutoBuilder ───────────────────────────────
-        # FIXED: print the actual exception so config problems are visible
         try:
             config = RobotConfig.fromGUISettings()
         except Exception as e:
@@ -117,7 +108,7 @@ class DriveSubsystem(commands2.Subsystem):
             self,
         )
 
-        # ── Per-axis slew rate limiters ───────────────────────────
+        # ── Slew rate limiters ────────────────────────────────────
         self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
@@ -130,16 +121,19 @@ class DriveSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
+        self._gyro_io.update_inputs(self._gyro_inputs)
+
         self.pose_estimator.update(
-            self.gyro.getRotation2d(),
+            self._gyro_inputs.rotation2d,
             self._get_module_positions(),
         )
         pose = self.pose_estimator.getEstimatedPosition()
         self.field.setRobotPose(pose)
 
-        SmartDashboard.putNumber("Drive/HeadingDeg", self.gyro.getAngle())
+        SmartDashboard.putNumber("Drive/HeadingDeg", self._gyro_inputs.yaw_deg)
         SmartDashboard.putNumber("Drive/PoseX", pose.X())
         SmartDashboard.putNumber("Drive/PoseY", pose.Y())
+        SmartDashboard.putBoolean("Drive/GyroConnected", self._gyro_inputs.connected)
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING
@@ -165,7 +159,7 @@ class DriveSubsystem(commands2.Subsystem):
 
         chassis_speeds = (
             wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
-                x_mps, y_mps, rot_rps, self.gyro.getRotation2d()
+                x_mps, y_mps, rot_rps, self._gyro_inputs.rotation2d
             )
             if field_relative
             else wpimath.kinematics.ChassisSpeeds(x_mps, y_mps, rot_rps)
@@ -198,7 +192,6 @@ class DriveSubsystem(commands2.Subsystem):
         self.drive(0.0, 0.0, 0.0, False, False)
 
     def reset_slew(self) -> None:
-        # FIXED: reset to 0 instead of recreating objects — avoids GC churn
         self._x_limiter.reset(0)
         self._y_limiter.reset(0)
         self._rot_limiter.reset(0)
@@ -211,7 +204,7 @@ class DriveSubsystem(commands2.Subsystem):
 
     def reset_pose(self, pose: wpimath.geometry.Pose2d) -> None:
         self.pose_estimator.resetPosition(
-            self.gyro.getRotation2d(),
+            self._gyro_inputs.rotation2d,
             self._get_module_positions(),
             pose,
         )
@@ -223,25 +216,19 @@ class DriveSubsystem(commands2.Subsystem):
         std_devs: tuple[float, float, float] | None = None,
     ) -> None:
         if std_devs:
-            self.pose_estimator.addVisionMeasurement(
-                pose, timestamp,
-                (std_devs[0], std_devs[1], std_devs[2])
-            )
+            self.pose_estimator.addVisionMeasurement(pose, timestamp, std_devs)
         else:
             self.pose_estimator.addVisionMeasurement(pose, timestamp)
 
     def zero_heading(self) -> None:
-        self.gyro.reset()
+        self._gyro_io.reset()
 
     def get_heading_degrees(self) -> float:
-        return self.gyro.getAngle()
+        return self._gyro_inputs.yaw_deg
 
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
-        return self.gyro.getRotation2d()
+        return self._gyro_inputs.rotation2d
 
-    # FIXED: was calling get_state without () — passed method refs instead of values.
-    # Also removed the duplicate public get_chassisSpeeds that had the same bug;
-    # callers should use _get_chassis_speeds() directly.
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._get_chassis_speeds()
 
@@ -249,7 +236,6 @@ class DriveSubsystem(commands2.Subsystem):
     # PATHPLANNER HELPERS
     # ─────────────────────────────────────────────────────────────
     def _get_chassis_speeds(self) -> wpimath.kinematics.ChassisSpeeds:
-        """Current robot-relative chassis speeds from measured module states."""
         return self.kinematics.toChassisSpeeds(
             (
                 self.front_left.get_state(),
@@ -260,7 +246,6 @@ class DriveSubsystem(commands2.Subsystem):
         )
 
     def _drive_chassis_speeds(self, speeds: wpimath.kinematics.ChassisSpeeds) -> None:
-        """Command chassis speeds directly — called by PathPlanner during auto."""
         fl, fr, rl, rr = self.kinematics.toSwerveModuleStates(speeds)
         wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
             (fl, fr, rl, rr), DriveConstants.kMaxSpeedMps
@@ -271,12 +256,11 @@ class DriveSubsystem(commands2.Subsystem):
         self.rear_right.set_desired_state(rr)
 
     def _should_flip_path(self) -> bool:
-        """Mirror paths to the red side of the field when on red alliance."""
         alliance = wpilib.DriverStation.getAlliance()
         return alliance == wpilib.DriverStation.Alliance.kRed
 
     # ─────────────────────────────────────────────────────────────
-    # INTERNAL HELPERS
+    # INTERNAL
     # ─────────────────────────────────────────────────────────────
     def _get_module_positions(self):
         return (

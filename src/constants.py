@@ -44,13 +44,13 @@ class DriveConstants:
     kRearLeftEncoderOffset   = 0.803
     kRearRightEncoderOffset  = 0.1814
 
-    kFrontLeftDriveId  = 5
-    kFrontLeftTurnId   = 6
-    kFrontRightDriveId = 7
-    kFrontRightTurnId  = 8
-    kRearLeftDriveId   = 3
-    kRearLeftTurnId    = 4
-    kRearRightDriveId  = 1
+    kFrontLeftDriveId  = 11
+    kFrontLeftTurnId   = 10
+    kFrontRightDriveId = 13
+    kFrontRightTurnId  = 12
+    kRearLeftDriveId   = 17
+    kRearLeftTurnId    = 18
+    kRearRightDriveId  = 7
     kRearRightTurnId   = 2
 
     kDrivePinionTeeth = 14
@@ -99,9 +99,9 @@ class DriveConstants:
 # SHOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 class ShooterConstants:
-    kShooterMotor1Id = 20
-    kShooterMotor2Id = 21
-    kFeederMotorId   = 10
+    kShooterMotor1Id = 1
+    kShooterMotor2Id = 3
+    kFeederMotorId   = 16
 
     kShooterP  = 0.5
     kShooterI  = 0.0
@@ -126,9 +126,9 @@ class ShooterConstants:
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-    kLeftMotorId  = 12
-    kRightMotorId = 11
-    kFuelSensorChannel = 9
+    kLeftMotorId  = 15
+    kRightMotorId = 14
+    #kFuelSensorChannel = 10
 
     kIntakeSpeed = 0.8
     kReverseSpeed = -0.5
@@ -139,7 +139,8 @@ class IntakeConstants:
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
 class ClimberConstants:
-    kClimberMotorId = 30
+    kClimberMotorId = 4
+    kClimberMotor2Id = 5
     kClimbSpeed = 0.8
     kDescendSpeed = -0.5
     kCurrentLimit = 40

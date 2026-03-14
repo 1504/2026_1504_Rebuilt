@@ -97,15 +97,16 @@ class RobotContainer:
         )
 
         # ── Operator ──────────────────────────────────────────────
-        self.operator.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))
-        self.operator.x().whileTrue(shoot_cmds.FeedCommand(self.shooter))
-        self.operator.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
-        self.operator.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
+        self.operator.rightTrigger().whileTrue(shoot_cmds.ShootCommand(self.shooter))
+        self.operator.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
+        self.operator.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+        self.operator.leftTrigger().whileTrue(intake_cmds.IntakeCommand(self.intake))
         self.operator.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
-        self.operator.rightBumper().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        commands2.button.Trigger(
-            lambda: self.operator.getLeftTriggerAxis() > 0.5
-        ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        self.operator.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        self.operator.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        # commands2.button.Trigger(
+        #     lambda: self.operator.getLeftTriggerAxis() > 0.5
+        # ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
     def configure_teleop(self) -> None:
         """Called by teleopInit — resets slew so the robot doesn't jerk on enable."""

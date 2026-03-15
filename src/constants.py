@@ -126,13 +126,10 @@ class ShooterConstants:
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-   # kLeftMotorId  = 15 #Motor is not conneted to a sparkmax.
-    kRightMotorId = 9
-    #kFuelSensorChannel = 10
-
+    kMotorId = 9          # Was kRightMotorId — only one motor now
     kIntakeSpeed = 0.8
     kReverseSpeed = -0.5
-    kCurrentLimit = 30
+    kCurrentLimit = 40    # NEO Vortex can handle more than 30A; bump to 40
 
 
 # ─────────────────────────────────────────────────────────────────────────────

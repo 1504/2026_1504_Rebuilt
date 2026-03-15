@@ -22,7 +22,9 @@ class IntakeCommand(commands2.Command):
         self._intake.stop()
 
     def isFinished(self) -> bool:
-        return self._stop_on_fuel# and self._intake.has_fuel()
+    # stop_on_fuel is True in auto but we have no sensor,
+    # so always return False — command runs until interrupted
+        return False
 
 
 class ReverseIntakeCommand(commands2.Command):

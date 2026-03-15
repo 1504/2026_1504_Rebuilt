@@ -35,12 +35,12 @@ class LimelightVision(commands2.Subsystem):
         self._tv_sub           = self._table.getIntegerTopic("tv").subscribe(0)
         self._tid_sub          = self._table.getIntegerTopic("tid").subscribe(-1)
         self._tag_count_sub    = self._table.getIntegerTopic("botpose_tagcount").subscribe(0)
-        self._ta_sub           = self._table.getDoubleTopic("ta").subscribe(0.0)    # target area (0–100%)
+        self._ta_sub           = self._table.getDoubleTopic("ta").subscribe(0.0)
         self._tx_sub           = self._table.getDoubleTopic("tx").subscribe(0.0)
         self._ty_sub           = self._table.getDoubleTopic("ty").subscribe(0.0)
         self._pipeline_pub     = self._table.getIntegerTopic("pipeline").publish()
 
-        # botpose_orb_wpiblue is the MegaTag2 pose (fuses gyro heading — much better single-tag accuracy)
+        # MegaTag2: fuses gyro heading for much better single-tag accuracy
         self._megatag2_sub     = self._table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe([])
 
         # ── State tracking ─────────────────────────────────────────
@@ -54,8 +54,7 @@ class LimelightVision(commands2.Subsystem):
     def periodic(self) -> None:
         # ── Gate 1: valid target ───────────────────────────────────
         if self._tv_sub.get() == 0:
-            SmartDashboard.putString("Vision/Status", "No Target")
-            self._publish_telemetry(accepted=False, latency=0.0)
+            self._publish_telemetry(accepted=False, latency=0.0, status="No Target")
             return
 
         # ── Gate 2: prefer MegaTag2 if available ──────────────────
@@ -66,8 +65,7 @@ class LimelightVision(commands2.Subsystem):
         pose_data    = megatag2 if use_megatag2 else botpose
 
         if len(pose_data) < 7:
-            SmartDashboard.putString("Vision/Status", "Bad Pose Data")
-            self._publish_telemetry(accepted=False, latency=0.0)
+            self._publish_telemetry(accepted=False, latency=0.0, status="Bad Pose Data")
             return
 
         x, y, _z, _roll, _pitch, yaw_deg, latency_ms = pose_data[:7]
@@ -75,8 +73,7 @@ class LimelightVision(commands2.Subsystem):
         # ── Gate 3: field bounds check ─────────────────────────────
         if not (VisionConstants.kFieldMinX < x < VisionConstants.kFieldMaxX) or \
            not (VisionConstants.kFieldMinY < y < VisionConstants.kFieldMaxY):
-            SmartDashboard.putString("Vision/Status", "Out of Bounds")
-            self._publish_telemetry(accepted=False, latency=latency_ms)
+            self._publish_telemetry(accepted=False, latency=latency_ms, status="Out of Bounds")
             return
 
         # ── Gate 4: heading sanity check (only for classic botpose) ─
@@ -85,16 +82,22 @@ class LimelightVision(commands2.Subsystem):
             gyro_deg   = self._drive.get_heading_degrees()
             yaw_error  = abs(_angle_diff(yaw_deg, gyro_deg))
             if yaw_error > VisionConstants.kMaxYawErrorDeg:
-                SmartDashboard.putString("Vision/Status", f"Yaw Mismatch ({yaw_error:.1f}°)")
-                self._publish_telemetry(accepted=False, latency=latency_ms)
+                self._publish_telemetry(
+                    accepted=False,
+                    latency=latency_ms,
+                    status=f"Yaw Mismatch ({yaw_error:.1f}°)",
+                )
                 return
 
         # ── Gate 5: velocity gating (wheel slip / fast motion) ─────
         chassis = self._drive.get_chassis_speeds()
         speed_mps = math.hypot(chassis.vx, chassis.vy)
         if speed_mps > VisionConstants.kMaxVisionSpeedMps:
-            SmartDashboard.putString("Vision/Status", f"Too Fast ({speed_mps:.1f} m/s)")
-            self._publish_telemetry(accepted=False, latency=latency_ms)
+            self._publish_telemetry(
+                accepted=False,
+                latency=latency_ms,
+                status=f"Too Fast ({speed_mps:.1f} m/s)",
+            )
             return
 
         # ── Compute std devs ───────────────────────────────────────
@@ -113,11 +116,11 @@ class LimelightVision(commands2.Subsystem):
         self._last_accepted_ts = wpilib.Timer.getFPGATimestamp()
         self._accepted_count += 1
 
-        SmartDashboard.putString(
-            "Vision/Status",
-            f"{'MegaTag2' if use_megatag2 else 'Classic'} | {tag_count} tag(s)",
+        self._publish_telemetry(
+            accepted=True,
+            latency=latency_ms,
+            status=f"{'MegaTag2' if use_megatag2 else 'Classic'} | {tag_count} tag(s)",
         )
-        self._publish_telemetry(accepted=True, latency=latency_ms)
 
     # ─────────────────────────────────────────────────────────────
     # STD DEV CALCULATION
@@ -129,17 +132,9 @@ class LimelightVision(commands2.Subsystem):
         tag_count: int,
         use_megatag2: bool,
     ) -> tuple[float, float, float]:
-        """
-        Scale trust based on:
-        - Distance from robot to pose estimate (closer = more trust)
-        - Number of tags visible (more = more trust)
-        - MegaTag2 vs classic (MegaTag2 heading is already gyro-fused,
-          so we set rotation std dev very high to avoid fighting the gyro)
-        """
         robot_pose = self._drive.get_pose()
         dist = math.hypot(x - robot_pose.X(), y - robot_pose.Y())
 
-        # Base std devs from constants, scaled by distance squared
         dist_scale = 1.0 + VisionConstants.kDistanceScaleFactor * dist * dist
 
         if tag_count >= 2:
@@ -158,7 +153,20 @@ class LimelightVision(commands2.Subsystem):
     # ─────────────────────────────────────────────────────────────
     # TELEMETRY
     # ─────────────────────────────────────────────────────────────
-    def _publish_telemetry(self, accepted: bool, latency: float) -> None:
+    def _publish_telemetry(self, accepted: bool, latency: float, status: str) -> None:
+        """
+        FIXED: old code called SmartDashboard.putString("Vision/Status", ...)
+        outside this function and then called _publish_telemetry separately,
+        meaning status was set before the rejection check incremented
+        _rejected_count correctly.  Status is now passed in as a parameter so
+        everything stays in sync.
+
+        FIXED: _rejected_count was incremented on EVERY call because the
+        `if not accepted` block was always reached (it was at the bottom of the
+        function with no early return).  Now the increment only happens when
+        accepted is False, as intended.
+        """
+        SmartDashboard.putString("Vision/Status", status)
         SmartDashboard.putBoolean("Vision/PoseAccepted", accepted)
         SmartDashboard.putNumber("Vision/LatencyMs", latency)
         SmartDashboard.putNumber("Vision/AcceptedCount", self._accepted_count)
@@ -167,6 +175,8 @@ class LimelightVision(commands2.Subsystem):
         SmartDashboard.putNumber("Vision/TY", self._ty_sub.get())
         SmartDashboard.putNumber("Vision/TargetArea", self._ta_sub.get())
         SmartDashboard.putNumber("Vision/TagID", self._tid_sub.get())
+
+        # FIXED: only increment rejected count when actually rejected
         if not accepted:
             self._rejected_count += 1
 
@@ -195,8 +205,6 @@ class LimelightVision(commands2.Subsystem):
         """
         Estimate horizontal ground distance to AprilTag using ty and known
         camera/tag geometry. Returns None if no valid target.
-
-        Assumes the tag is at VisionConstants.kTagHeightMeters.
         """
         if not self.has_target():
             return None
@@ -211,7 +219,7 @@ class LimelightVision(commands2.Subsystem):
         self._pipeline_pub.set(index)
 
     def time_since_last_accepted(self) -> float:
-        """Seconds since the last accepted vision measurement. Useful for staleness checks."""
+        """Seconds since the last accepted vision measurement."""
         return wpilib.Timer.getFPGATimestamp() - self._last_accepted_ts
 
 

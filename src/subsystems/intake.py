@@ -1,13 +1,13 @@
 """
 Team 1504 - IntakeSubsystem
-Dual SparkMax intake rollers + DIO fuel sensor.
+SparkFlex + NEO Vortex intake roller.
 """
 
 import commands2
 import rev
 import wpilib
-from wpilib import DigitalInput, SmartDashboard
-from rev import SparkMax, SparkMaxConfig
+from wpilib import SmartDashboard
+from rev import SparkFlex, SparkFlexConfig
 
 from src.constants import IntakeConstants
 
@@ -16,39 +16,32 @@ class IntakeSubsystem(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
 
-        #self._left_motor  = SparkMax(IntakeConstants.kLeftMotorId,  SparkMax.MotorType.kBrushless)
-        self._right_motor = SparkMax(IntakeConstants.kRightMotorId, SparkMax.MotorType.kBrushless)
+        # NEO Vortex requires SparkFlex, NOT SparkMax
+        self._motor = SparkFlex(IntakeConstants.kMotorId, SparkFlex.MotorType.kBrushless)
 
-        left_cfg  = SparkMaxConfig()
-        right_cfg = SparkMaxConfig()
-        left_cfg.smartCurrentLimit(IntakeConstants.kCurrentLimit)
-        right_cfg.smartCurrentLimit(IntakeConstants.kCurrentLimit)
-        right_cfg.inverted(False)  # Right motor faces opposite direction
+        cfg = SparkFlexConfig()
+        cfg.smartCurrentLimit(IntakeConstants.kCurrentLimit)
+        cfg.inverted(False)  # Flip to True if intake runs backwards
 
-        #self._left_motor.configure(left_cfg,  rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
-        self._right_motor.configure(right_cfg, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._motor.configure(
+            cfg,
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters,
+        )
 
-        #self._fuel_sensor = DigitalInput(IntakeConstants.kFuelSensorChannel)
+        self._encoder = self._motor.getEncoder()
 
-    # def periodic(self) -> None:
-    #     SmartDashboard.putBoolean("Intake/HasFuel", self.has_fuel())
-    #     #SmartDashboard.putNumber("Intake/LeftCurrent", self._left_motor.getOutputCurrent())
+    def periodic(self) -> None:
+        SmartDashboard.putNumber("Intake/Current", self._motor.getOutputCurrent())
+        SmartDashboard.putNumber("Intake/Velocity", self._encoder.getVelocity())
 
     def intake_run(self, speed: float | None = None) -> None:
         spd = speed if speed is not None else IntakeConstants.kIntakeSpeed
-        #self._left_motor.set(spd)
-        self._right_motor.set(spd)
+        self._motor.set(spd)
 
     def reverse(self, speed: float | None = None) -> None:
         spd = speed if speed is not None else IntakeConstants.kReverseSpeed
-        #self._left_motor.set(spd)
-        self._right_motor.set(spd)
+        self._motor.set(spd)
 
     def stop(self) -> None:
-        #self._left_motor.set(0.0)
-        self._right_motor.set(0.0)
-
-    # def has_fuel(self) -> bool:
-    #     """True when fuel sensor beam is broken (piece detected)."""
-    #     #return not self._fuel_sensor.get()  # DIO is normally-high; inverted when blocked
-        
+        self._motor.set(0.0)

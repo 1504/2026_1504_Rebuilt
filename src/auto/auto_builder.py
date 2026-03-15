@@ -61,7 +61,7 @@ class PPAutoBuilder:
         )
         NamedCommands.registerCommand(
             "intake",
-            IntakeCommand(self._intake, stop_on_fuel=True),
+            IntakeCommand(self._intake, stop_on_fuel=False),  # was True
         )
         NamedCommands.registerCommand(
             "spinup",

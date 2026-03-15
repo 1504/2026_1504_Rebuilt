@@ -15,13 +15,14 @@ import wpimath.system.plant
 import navx
 import commands2
 from wpilib import Field2d, SmartDashboard
+import ntcore
 
 # PathPlanner
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
-from src.constants import DriveConstants, AutoConstants
+from src.constants import DriveConstants, AutoConstants, VisionConstants
 import src.swerve.swerve_module as swerve_module
 
 
@@ -130,6 +131,14 @@ class DriveSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
+        
+        # Feed robot heading to Limelight so MegaTag2 can fuse it
+        ntcore.NetworkTableInstance.getDefault() \
+            .getTable(VisionConstants.kLimelightName) \
+            .getDoubleArrayTopic("robot_orientation_set") \
+            .publish() \
+            .set([self.gyro.getAngle(), 0.0, 0.0, 0.0, 0.0, 0.0])
+        
         self.pose_estimator.update(
             self.gyro.getRotation2d(),
             self._get_module_positions(),

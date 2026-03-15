@@ -219,15 +219,15 @@ class IntakeDrawerConstants:
     k_max_velocity_meter_per_second = 0.5
     k_name = "intakeDrawer"
 
-    k_kS_volts = 0
-    k_kG_volts = 0.88 / 2.0
-    k_kV_volt_second_per_radian = 12.05
-    k_kA_volt_second_squared_per_meter = 0.10 / 2.0
+    k_kS_volts = 0 # constant to always add, uses the sign of velocity
+    k_kG_volts = 0.88 / 2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
+    k_kV_volt_second_per_radian = 12.05  # stays the same with one or two motors, based on the NEO itself and gear ratio
+    k_kA_volt_second_squared_per_meter = 0.10 / 2.0 # cuts in half with 2 motors
 
-    k_gear_ratio = 3
-    k_effective_pulley_diameter = inchesToMeters(1.91)
-    k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio
-    k_mass_kg = lbsToKilograms(4)
+    k_gear_ratio = 3 # 9, 12, or 15 gear ratio said victor 1/30/25
+                      # we need it seperate for the sim
+    k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
+    k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio # 2 because our elevator goes twice as fast as the chain because continuous rigging
 
     k_config = SparkMaxConfig() 
     k_config.voltageCompensation(12)           

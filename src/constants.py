@@ -2,7 +2,7 @@
 Team 1504 Desperate Penguins - Constants
 2026 Season | FRC Game: Rebuilt
 """
-
+ 
 import math
 from wpimath.units import inchesToMeters, lbsToKilograms
 from rev import ClosedLoopSlot, SparkClosedLoopController
@@ -10,8 +10,8 @@ import wpimath.units
 import rev
 import wpimath.trajectory
 from rev import SparkMaxConfig
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # OPERATOR INTERFACE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -21,32 +21,41 @@ class OIConstants:
     kDriveDeadband = 0.13
     kRotDeadband = 0.16
     kSlowModeMultiplier = 0.30
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    kMaxSpeedMps = 1.5          # capped change to 6 when ready.
+    # Teleop top speed — intentionally conservative while tuning.
+    # Raise toward kMaxAutoSpeedMps when you're confident in the robot.
+    kMaxSpeedMps = 1.5
+ 
+    # Physical ceiling used for PathPlanner desaturation and fallback config.
+    # FIXED: auto was desaturating against kMaxSpeedMps (1.5 m/s), which made
+    # PathPlanner's feedforward wrong and caused the robot to undershoot every
+    # path segment.  Always desaturate auto against the real hardware limit.
+    kMaxAutoSpeedMps = 4.8
+ 
     kMaxAngularSpeedRps = 2 * math.pi
-
+ 
     kMagnitudeSlewRate  = 3.0
     kRotationalSlewRate = 2.0
     kSlowModeMultiplier = 0.3
-
+ 
     kTrackWidth = 0.5715
     kWheelBase  = 0.5715
-
+ 
     kFrontLeftChassisOffset  = -math.pi / 2
     kFrontRightChassisOffset = 0.0
     kRearLeftChassisOffset   = math.pi
     kRearRightChassisOffset  = math.pi / 2
-
+ 
     kFrontLeftEncoderOffset  = 0.8546
     kFrontRightEncoderOffset = 0.665
     kRearLeftEncoderOffset   = 0.803
     kRearRightEncoderOffset  = 0.1814
-
+ 
     kFrontLeftDriveId  = 11
     kFrontLeftTurnId   = 10
     kFrontRightDriveId = 13
@@ -55,49 +64,46 @@ class DriveConstants:
     kRearLeftTurnId    = 18
     kRearRightDriveId  = 7
     kRearRightTurnId   = 2
-
+ 
     kDrivePinionTeeth = 14
     kDriveMotorFreeSpeedRps = 5676.0 / 60
     kWheelDiameterMeters = 0.0762
     kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
     kDriveMotorReduction = (45.0 * 22) / (kDrivePinionTeeth * 15)
     kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction
-
+ 
     kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction
     kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0
-
+ 
     kTurnEncoderPositionFactor = 2 * math.pi
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
     kTurnEncoderInverted = True
-
+ 
     kDriveP  = 0.04
     kDriveI  = 0.0
     kDriveD  = 0.0
     kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
-
+ 
     kTurnP  = 2.0
     kTurnI  = 0.0
     kTurnD  = 0.0
     kTurnFF = 0.0
-
+ 
     kDriveMinOutput = -1.0
     kDriveMaxOutput =  1.0
     kTurnMinOutput  = -1.0
     kTurnMaxOutput  =  1.0
-
+ 
     kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
     kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
-
+ 
     kDriveCurrentLimit = 50  # Amps
     kTurnCurrentLimit  = 20  # Amps
-
-    # FIXED: was 241, 158 (pixel coords — way off field).
-    # Set to a real field position in meters, or (0, 0) as a safe default.
-    # Update these to your actual starting pose before each match.
+ 
     k_start_x = 2.0   # meters from blue alliance wall
     k_start_y = 4.0   # meters from bottom wall (mid-field height)
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # SHOOTER
 # ─────────────────────────────────────────────────────────────────────────────
@@ -105,17 +111,17 @@ class ShooterConstants:
     kShooterMotor1Id = 1
     kShooterMotor2Id = 3
     kFeederMotorId   = 16
-
+ 
     kShooterP  = 0.5
     kShooterI  = 0.0
     kShooterD  = 0.0
     kShooterKv = 0.12
-
+ 
     kVelocityToleranceRps = 2.0
     kFeederSpeed = 0.6
     kFeederCurrentLimit = 20
     kFlywheelCurrentLimit = 60
-
+ 
     kShooterTable = [
         (1.5,  35.0),
         (2.0,  40.0),
@@ -123,18 +129,18 @@ class ShooterConstants:
         (3.0,  50.0),
         (3.5,  55.0),
     ]
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-    kMotorId = 9          # Was kRightMotorId — only one motor now
+    kMotorId = 9
     kIntakeSpeed = 0.8
     kReverseSpeed = -0.5
-    kCurrentLimit = 40    # NEO Vortex can handle more than 30A; bump to 40
-
-
+    kCurrentLimit = 40
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
@@ -144,59 +150,53 @@ class ClimberConstants:
     kClimbSpeed = 0.8
     kDescendSpeed = -0.5
     kCurrentLimit = 40
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # VISION
 # ─────────────────────────────────────────────────────────────────────────────
 class VisionConstants:
     kLimelightName = "limelight"
  
-    # Camera geometry (meters / degrees)
-    kCameraHeightMeters = 0.675    # Height of lens above floor
-    kCameraPitch        = 0    # Degrees up from horizontal
-    kCameraYaw          = 0.0     # Degrees from robot forward (0 = straight ahead)
+    kCameraHeightMeters = 0.675
+    kCameraPitch        = 0
+    kCameraYaw          = 0.0
  
-    # AprilTag height (FRC 2026 field — update if different)
     kTagHeightMeters = 1.45
  
-    # Field bounds (meters) — reject poses outside these
     kFieldMinX =  0.0
     kFieldMaxX = 16.54
     kFieldMinY =  0.0
     kFieldMaxY =  8.21
  
-    # Trust tuning
-    # xy std devs in meters; rot std dev in radians
-    # Smaller = trust vision more. Start conservative and reduce after validation.
     kSingleTagStdDevs = (4.0, 4.0, 8.0)
     kMultiTagStdDevs  = (0.5, 0.5, 1.0)
  
-    # Distance-based scaling: std dev multiplied by (1 + factor * dist^2)
-    # At 3 m away with factor=0.1: scale = 1 + 0.1*9 = 1.9x less trusted
     kDistanceScaleFactor = 0.10
  
-    # Reject vision if robot speed exceeds this (m/s) — avoids blur/slip errors
     kMaxVisionSpeedMps = 3.0
  
-    # Reject vision if Limelight yaw differs from gyro by more than this (degrees)
-    # Only applies to classic botpose (MegaTag2 already uses the gyro)
     kMaxYawErrorDeg = 15.0
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # AUTONOMOUS  (PathPlanner)
 # ─────────────────────────────────────────────────────────────────────────────
 class AutoConstants:
     kPxController = 5.0
     kPyController = 5.0
-
+ 
     kPThetaController = 5.0
-
-    kMaxSpeedMps   = 1.5 #change to 3 when ready
-    kMaxAccelMps2  = 2.0
-
+ 
+    # FIXED: was 1.5 (matching the teleop cap), so the fallback RobotConfig
+    # told PathPlanner the robot could only do 1.5 m/s and all feedforward
+    # was scaled wrong.  Match the PathPlanner GUI setting (4.8 m/s).
+    kMaxSpeedMps   = 4.8
+    kMaxAccelMps2  = 5.0
+ 
     kRobotMassKg = 55.0
     kRobotMOI    = 4.5
-
+ 
     kWheelCOF = 1.0
 
 # ─────────────────────────────────────────────────────────────────────────────

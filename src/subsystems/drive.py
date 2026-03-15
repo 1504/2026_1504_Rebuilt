@@ -79,8 +79,17 @@ class DriveSubsystem(commands2.Subsystem):
             ),
         )
 
+        # ── NT publisher for Limelight heading feed ───────────────
+        # FIXED: create publisher ONCE here instead of every periodic() loop.
+        # Recreating a publisher every 20ms leaks handles and causes NT warnings.
+        self._ll_orientation_pub = (
+            ntcore.NetworkTableInstance.getDefault()
+            .getTable(VisionConstants.kLimelightName)
+            .getDoubleArrayTopic("robot_orientation_set")
+            .publish()
+        )
+
         # ── PathPlanner AutoBuilder ───────────────────────────────
-        # FIXED: print the actual exception so config problems are visible
         try:
             config = RobotConfig.fromGUISettings()
         except Exception as e:
@@ -131,14 +140,12 @@ class DriveSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
-        
-        # Feed robot heading to Limelight so MegaTag2 can fuse it
-        ntcore.NetworkTableInstance.getDefault() \
-            .getTable(VisionConstants.kLimelightName) \
-            .getDoubleArrayTopic("robot_orientation_set") \
-            .publish() \
-            .set([self.gyro.getAngle(), 0.0, 0.0, 0.0, 0.0, 0.0])
-        
+
+        # Feed robot heading to Limelight so MegaTag2 can fuse it.
+        # FIXED: use the persistent publisher created in __init__ instead of
+        # calling .publish() here — calling publish() every loop leaks NT handles.
+        self._ll_orientation_pub.set([self.gyro.getAngle(), 0.0, 0.0, 0.0, 0.0, 0.0])
+
         self.pose_estimator.update(
             self.gyro.getRotation2d(),
             self._get_module_positions(),
@@ -207,7 +214,6 @@ class DriveSubsystem(commands2.Subsystem):
         self.drive(0.0, 0.0, 0.0, False, False)
 
     def reset_slew(self) -> None:
-        # FIXED: reset to 0 instead of recreating objects — avoids GC churn
         self._x_limiter.reset(0)
         self._y_limiter.reset(0)
         self._rot_limiter.reset(0)
@@ -248,9 +254,6 @@ class DriveSubsystem(commands2.Subsystem):
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
         return self.gyro.getRotation2d()
 
-    # FIXED: was calling get_state without () — passed method refs instead of values.
-    # Also removed the duplicate public get_chassisSpeeds that had the same bug;
-    # callers should use _get_chassis_speeds() directly.
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._get_chassis_speeds()
 
@@ -269,10 +272,16 @@ class DriveSubsystem(commands2.Subsystem):
         )
 
     def _drive_chassis_speeds(self, speeds: wpimath.kinematics.ChassisSpeeds) -> None:
-        """Command chassis speeds directly — called by PathPlanner during auto."""
+        """Command chassis speeds directly — called by PathPlanner during auto.
+
+        FIXED: desaturate against kMaxAutoSpeedMps (the true physical max),
+        not the conservative kMaxSpeedMps teleop cap.  Using the teleop cap
+        here means PathPlanner's feedforward math is wrong and the robot
+        undershoots every path segment.
+        """
         fl, fr, rl, rr = self.kinematics.toSwerveModuleStates(speeds)
         wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            (fl, fr, rl, rr), DriveConstants.kMaxSpeedMps
+            (fl, fr, rl, rr), DriveConstants.kMaxAutoSpeedMps
         )
         self.front_left.set_desired_state(fl)
         self.front_right.set_desired_state(fr)

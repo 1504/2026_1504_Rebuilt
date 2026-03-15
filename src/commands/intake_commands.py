@@ -22,7 +22,7 @@ class IntakeCommand(commands2.Command):
         self._intake.stop()
 
     def isFinished(self) -> bool:
-        return self._stop_on_fuel and self._intake.has_fuel()
+        return self._stop_on_fuel# and self._intake.has_fuel()
 
 
 class ReverseIntakeCommand(commands2.Command):

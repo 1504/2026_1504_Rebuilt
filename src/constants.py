@@ -127,7 +127,7 @@ class ShooterConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
    # kLeftMotorId  = 15 #Motor is not conneted to a sparkmax.
-    kRightMotorId = 14
+    kRightMotorId = 9
     #kFuelSensorChannel = 10
 
     kIntakeSpeed = 0.8

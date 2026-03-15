@@ -148,17 +148,37 @@ class ClimberConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 class VisionConstants:
     kLimelightName = "limelight"
-    kCameraToRobotX = 0.0
-    kCameraToRobotY = 0.0
-    kCameraToRobotZ = 0.5
-    kCameraRoll  = 0.0
-    kCameraPitch = 25.0
-    kCameraYaw   = 0.0
-
+ 
+    # Camera geometry (meters / degrees)
+    kCameraHeightMeters = 0.675    # Height of lens above floor
+    kCameraPitch        = 0    # Degrees up from horizontal
+    kCameraYaw          = 0.0     # Degrees from robot forward (0 = straight ahead)
+ 
+    # AprilTag height (FRC 2026 field — update if different)
+    kTagHeightMeters = 1.45
+ 
+    # Field bounds (meters) — reject poses outside these
+    kFieldMinX =  0.0
+    kFieldMaxX = 16.54
+    kFieldMinY =  0.0
+    kFieldMaxY =  8.21
+ 
+    # Trust tuning
+    # xy std devs in meters; rot std dev in radians
+    # Smaller = trust vision more. Start conservative and reduce after validation.
     kSingleTagStdDevs = (4.0, 4.0, 8.0)
     kMultiTagStdDevs  = (0.5, 0.5, 1.0)
-
-
+ 
+    # Distance-based scaling: std dev multiplied by (1 + factor * dist^2)
+    # At 3 m away with factor=0.1: scale = 1 + 0.1*9 = 1.9x less trusted
+    kDistanceScaleFactor = 0.10
+ 
+    # Reject vision if robot speed exceeds this (m/s) — avoids blur/slip errors
+    kMaxVisionSpeedMps = 3.0
+ 
+    # Reject vision if Limelight yaw differs from gyro by more than this (degrees)
+    # Only applies to classic botpose (MegaTag2 already uses the gyro)
+    kMaxYawErrorDeg = 15.0
 # ─────────────────────────────────────────────────────────────────────────────
 # AUTONOMOUS  (PathPlanner)
 # ─────────────────────────────────────────────────────────────────────────────

@@ -1,12 +1,6 @@
 """
 Team 1504 - ShooterSubsystem
 Phoenix6 TalonFX velocity PID for flywheel + SparkMax feeder.
-
-Improvements over old code:
-- Proper Phoenix6 VelocityVoltage control request
-- Feeder uses current stall detection for jam protection
-- InterpolatingDoubleTreeMap for distance → speed lookup
-- All magic numbers in ShooterConstants
 """
 
 import commands2
@@ -16,7 +10,7 @@ from wpilib import SmartDashboard
 # Phoenix6
 from phoenix6.hardware import TalonFX
 from phoenix6.controls import VelocityVoltage
-from phoenix6.configs import TalonFXConfiguration
+from phoenix6.configs import TalonFXConfiguration, CurrentLimitsConfigs
 
 # SparkMax
 import rev
@@ -34,19 +28,26 @@ class ShooterSubsystem(commands2.Subsystem):
         self._motor2 = TalonFX(ShooterConstants.kShooterMotor2Id)
 
         cfg = TalonFXConfiguration()
+
+        # PID / feedforward
         cfg.slot0.k_p  = ShooterConstants.kShooterP
         cfg.slot0.k_i  = ShooterConstants.kShooterI
         cfg.slot0.k_d  = ShooterConstants.kShooterD
         cfg.slot0.k_v  = ShooterConstants.kShooterKv
 
+        # FIXED: kFlywheelCurrentLimit was defined in constants but never applied.
+        # TalonFX uses CurrentLimitsConfigs — smartCurrentLimit is a REV-only API.
+        # supply_current_limit  = hard fuse-style ceiling (protects wiring/breaker)
+        # stator_current_limit  = torque/heat ceiling (protects the motor itself)
+        cfg.current_limits.supply_current_limit_enable = True
+        cfg.current_limits.supply_current_limit = ShooterConstants.kFlywheelCurrentLimit
+        cfg.current_limits.stator_current_limit_enable = True
+        cfg.current_limits.stator_current_limit = ShooterConstants.kFlywheelStatorCurrentLimit
+
         self._motor1.configurator.apply(cfg)
         self._motor2.configurator.apply(cfg)
 
-        # Motor 2 follows motor 1 in opposite direction (drum launcher)
-        # If both spin same direction, invert one here:
-        # self._motor2.set_inverted(True)
-
-        # Control request object (reused every loop - avoids GC pressure)
+        # Control request object (reused every loop — avoids GC pressure)
         self._velocity_request = VelocityVoltage(0).with_slot(0).with_enable_foc(True)
 
         # ── Feeder motor (SparkMax NEO 550) ───────────────────────
@@ -70,18 +71,18 @@ class ShooterSubsystem(commands2.Subsystem):
         SmartDashboard.putNumber("Shooter/Target RPS", self._target_rps)
         SmartDashboard.putBoolean("Shooter/AtSpeed", self.is_at_speed())
         SmartDashboard.putNumber("Shooter/FeederCurrent", self._feeder.getOutputCurrent())
+        SmartDashboard.putNumber("Shooter/Motor1Current", self._motor1.get_supply_current().value)
+        SmartDashboard.putNumber("Shooter/Motor2Current", self._motor2.get_supply_current().value)
 
     # ─────────────────────────────────────────────────────────────
     # FLYWHEEL CONTROL
     # ─────────────────────────────────────────────────────────────
     def set_velocity_rps(self, rps: float) -> None:
-        """Set target flywheel velocity in rotations per second."""
         self._target_rps = rps
         self._motor1.set_control(self._velocity_request.with_velocity(rps))
         self._motor2.set_control(self._velocity_request.with_velocity(rps))
 
     def set_velocity_from_distance(self, distance_meters: float) -> None:
-        """Look up target RPS from shooter table and apply."""
         rps = self._interpolate_rps(distance_meters)
         self.set_velocity_rps(rps)
 

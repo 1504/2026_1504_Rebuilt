@@ -203,11 +203,11 @@ class AutoConstants:
 # INTAKE Drawer - this is the system that deploys out our ball getter.
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeDrawerConstants:
-    kLeftDrawerMotorId  = 15 #Motor is not conneted to a sparkmax.
-    kRightDrawerMotorId = 9
+    kLeftDrawerMotorId  = 19 #Motor is not conneted to a sparkmax.
+    kRightDrawerMotorId = 14
     
     kDrawerStartPosition = 0
-    kDrawerDeployedPosition = wpimath.units.inchesToMeters(30) 
+    kDrawerDeployedPosition = wpimath.units.inchesToMeters(6) 
 
     kDrawerEffectivePulleyRadius = 2
     k_max_acceleration_meter_per_sec_squared = 0.5
@@ -226,8 +226,8 @@ class IntakeDrawerConstants:
     k_mass_kg = lbsToKilograms(4)
     
 
-    k_config = SparkMaxConfig()
-    k_config.voltageCompensation(12)            
+    k_config = SparkMaxConfig() 
+    k_config.voltageCompensation(12)           
     k_config.inverted(True)
 
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)

@@ -26,5 +26,4 @@ requires = [
     "phoenix6",
     "pynetconsole",
     "pynetworktables",
-    "robotpy-pathplannerlib"
 ]

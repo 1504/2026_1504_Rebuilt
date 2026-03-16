@@ -9,6 +9,12 @@
           "data": {
             "commands": [
               {
+                "type": "path",
+                "data": {
+                  "pathName": "Starting Blue One"
+                }
+              },
+              {
                 "type": "named",
                 "data": {
                   "name": "Shoot"

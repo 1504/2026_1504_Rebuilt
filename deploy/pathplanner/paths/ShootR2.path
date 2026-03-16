@@ -31,11 +31,11 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.2679738562091506,
-      "rotationDegrees": 135.0
+      "rotationDegrees": -135.0
     },
     {
       "waypointRelativePos": 0.7372549019607841,
-      "rotationDegrees": 135.0
+      "rotationDegrees": -135.0
     }
   ],
   "constraintZones": [],
@@ -51,7 +51,7 @@
   },
   "goalEndState": {
     "velocity": 1.0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "Shoot",

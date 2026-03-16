@@ -16,12 +16,12 @@ import commands2
 import wpilib
 import wpimath.geometry
 import ntcore
-
+from src.subsystems.drive import DriveSubsystem
 from src.constants import VisionConstants
 
 
 class LimelightVision(commands2.Subsystem):
-    def __init__(self, drive) -> None:
+    def __init__(self, drive:DriveSubsystem) -> None:
         super().__init__()
         self._drive = drive
         self._nt = ntcore.NetworkTableInstance.getDefault()

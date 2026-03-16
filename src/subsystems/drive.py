@@ -28,7 +28,7 @@ import src.swerve.swerve_module as swerve_module
 class DriveSubsystem(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
-
+        self.hi=1
         # ── Swerve modules ────────────────────────────────────────
         self.front_left  = swerve_module.SwerveModule(
             DriveConstants.kFrontLeftDriveId,
@@ -222,6 +222,8 @@ class DriveSubsystem(commands2.Subsystem):
         timestamp: float,
         std_devs: tuple[float, float, float] | None = None,
     ) -> None:
+        self.hi=self.hi+1
+        print(self.hi)
         if std_devs:
             self.pose_estimator.addVisionMeasurement(
                 pose, timestamp,

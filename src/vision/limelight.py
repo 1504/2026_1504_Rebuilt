@@ -78,3 +78,5 @@ class LimelightVision(commands2.Subsystem):
     def get_ty(self) -> float:
         """Vertical angle offset to primary target (degrees)."""
         return self._table.getEntry("ty").getDouble(0.0)
+    
+    

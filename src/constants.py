@@ -149,7 +149,7 @@ class ClimberConstants:
 # VISION
 # ─────────────────────────────────────────────────────────────────────────────
 class VisionConstants:
-    kLimelightName = "limelight"
+    kLimelightName = "limelight-one"
     kCameraToRobotX = 0.0
     kCameraToRobotY = 0.0
     kCameraToRobotZ = 0.5

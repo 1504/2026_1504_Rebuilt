@@ -1,6 +1,52 @@
 """
 Team 1504 Desperate Penguins - RobotContainer
 Inspired by 6328 Mechanical Advantage's architecture.
+
+────────────────────────────────────────────────────────────
+CONTROLLER MODES
+────────────────────────────────────────────────────────────
+Flip the flag below to switch between layouts:
+
+  SINGLE_CONTROLLER_TEST = True   → one Xbox controller, port 0
+  SINGLE_CONTROLLER_TEST = False  → driver (port 0) + operator (port 1)
+
+────────────────────────────────────────────────────────────
+SINGLE-CONTROLLER TEST LAYOUT  (one Xbox, port 0)
+────────────────────────────────────────────────────────────
+  Left stick          → translate (field-relative)
+  Right stick X       → rotate
+  Left bumper (hold)  → slow mode
+
+  A                   → shoot (spin up + feed while held)
+  B                   → intake (while held)
+  X                   → reverse intake (while held)
+  Y                   → spin up flywheel only (while held)
+  Right bumper        → feed only (while held)
+  Right trigger       → climb up (while held)
+  Left trigger        → climb down (while held)
+  Start               → reset gyro heading
+  Back                → lock wheels (X pattern)
+
+────────────────────────────────────────────────────────────
+TWO-CONTROLLER COMP LAYOUT
+────────────────────────────────────────────────────────────
+Driver (port 0):
+  Left stick          → translate (field-relative)
+  Right stick X       → rotate
+  Left bumper (hold)  → slow mode
+  Right bumper        → lock wheels (X pattern)
+  Right trigger       → robot-relative drive (hold)
+  Start               → reset gyro heading
+  Back                → vision snap to target
+
+Operator (port 1):
+  Right trigger       → shoot (spin up + feed while held)
+  Right bumper        → feed only (while held)
+  A                   → spin up flywheel only (while held)
+  Left trigger        → intake (while held)
+  Left bumper         → reverse intake (while held)
+  X                   → climb up (while held)
+  Y                   → climb down (while held)
 """
 
 import commands2
@@ -21,7 +67,12 @@ import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
-import src.commands.intakedrawercommands as drawer_command
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ← FLIP THIS FLAG BEFORE PLUGGING IN / UNPLUGGING THE OPERATOR CONTROLLER
+# ─────────────────────────────────────────────────────────────────────────────
+SINGLE_CONTROLLER_TEST = True
 
 
 class RobotContainer:
@@ -35,8 +86,10 @@ class RobotContainer:
         self.vision  = LimelightVision(self.drive)
 
         # ── Controllers ───────────────────────────────────────────
-        self.driver   = commands2.button.CommandXboxController(OIConstants.kDriverPort)
-        self.operator = commands2.button.CommandXboxController(OIConstants.kOperatorPort)
+        self.driver = commands2.button.CommandXboxController(OIConstants.kDriverPort)
+
+        if not SINGLE_CONTROLLER_TEST:
+            self.operator = commands2.button.CommandXboxController(OIConstants.kOperatorPort)
 
         # ── Default command: field-relative drive ─────────────────
         self.drive.setDefaultCommand(
@@ -61,57 +114,64 @@ class RobotContainer:
     # TELEOP BINDINGS
     # ─────────────────────────────────────────────────────────────
     def configure_teleop_bindings(self) -> None:
-        """
-        Driver (port 0):
-          Left stick      → translate
-          Right stick X   → rotate
-          LB              → slow mode (hold)
-          RB              → set X / lock wheels
-          Right trigger   → robot-relative drive (hold)
-          Start           → reset gyro heading
-          Back            → vision snap to target
+        if SINGLE_CONTROLLER_TEST:
+            self._bind_single_controller()
+        else:
+            self._bind_two_controllers()
 
-        Operator (port 1):
-          A               → shoot (spin up + feed)
-          X               → feed only
-          Y               → spin up only
-          B               → intake
-          Left bumper     → reverse intake
-          Right bumper    → climb up
-          Left trigger    → climb down
-        """
+    # ── Single-controller test layout ────────────────────────────
+    def _bind_single_controller(self) -> None:
+        d = self.driver
+
+        # Drive utilities
+        d.back().onTrue(drive_cmds.SetXCommand(self.drive))
+        d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
+
+        # Shooter
+        d.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))       # spin up + feed
+        d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))      # spin up only
+        d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))  # feed only
+
+        # Intake
+        d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
+        d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+
+        # Climber — triggers give a natural "squeeze to climb" feel
+        d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+
+    # ── Two-controller comp layout ────────────────────────────────
+    def _bind_two_controllers(self) -> None:
+        d = self.driver
+        op = self.operator
 
         # ── Driver ────────────────────────────────────────────────
-        self.driver.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
-        self.driver.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
-        self.driver.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
+        d.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
+        d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
+        d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
 
-        # Robot-relative drive while right trigger is held.
-        # Uses the same sticks as normal driving — just ignores field heading.
-        # Useful for precise alignment maneuvers against a field element.
-        self.driver.rightTrigger(0.5).whileTrue(
+        # Robot-relative drive while right trigger held — useful for
+        # precise alignment maneuvers against a field element
+        d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(
                 self.drive,
-                lambda: -self.driver.getLeftY(),
-                lambda: -self.driver.getLeftX(),
-                lambda: -self.driver.getRightX(),
-                slow_mode_supplier=lambda: self.driver.getHID().getLeftBumper(),
+                lambda: -d.getLeftY(),
+                lambda: -d.getLeftX(),
+                lambda: -d.getRightX(),
+                slow_mode_supplier=lambda: d.getHID().getLeftBumper(),
             )
         )
 
         # ── Operator ──────────────────────────────────────────────
-        self.operator.rightTrigger().whileTrue(shoot_cmds.ShootCommand(self.shooter))
-        self.operator.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
-        self.operator.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
-        self.operator.leftTrigger().whileTrue(intake_cmds.IntakeCommand(self.intake))
-        self.operator.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
-        self.operator.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        self.operator.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
-        self.operator.b().onTrue()
+        op.rightTrigger(0.5).whileTrue(shoot_cmds.ShootCommand(self.shooter))
+        op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
+        op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
 
-        # commands2.button.Trigger(
-        #     lambda: self.operator.getLeftTriggerAxis() > 0.5
-        # ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
+        op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+
+        op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
     def configure_teleop(self) -> None:
         """Called by teleopInit — resets slew so the robot doesn't jerk on enable."""
@@ -124,17 +184,15 @@ class RobotContainer:
         self.auto_chooser = wpilib.SendableChooser()
         self.auto_chooser.setDefaultOption("Do Nothing", None)
 
-        # ── Add your PathPlanner autos here ───────────────────────
-        self.auto_chooser.addOption("showoff", "showoff")
-        self.auto_chooser.addOption("B1",    "Blue One")
-        self.auto_chooser.addOption("B2",    "Blue Two")
-        self.auto_chooser.addOption("B3",    "Blue Three")
-        self.auto_chooser.addOption("R1",    "Red One")
-        self.auto_chooser.addOption("R2",    "Red Two")
-        self.auto_chooser.addOption("R3",    "Red Three")
-        self.auto_chooser.addOption("Test",    "TestAuto")
-        self.auto_chooser.addOption("!",    "New New Path")
-        # Add more as you create them in the PathPlanner GUI
+        self.auto_chooser.addOption("showoff",  "showoff")
+        self.auto_chooser.addOption("B1",       "Blue One")
+        self.auto_chooser.addOption("B2",       "Blue Two")
+        self.auto_chooser.addOption("B3",       "Blue Three")
+        self.auto_chooser.addOption("R1",       "Red One")
+        self.auto_chooser.addOption("R2",       "Red Two")
+        self.auto_chooser.addOption("R3",       "Red Three")
+        self.auto_chooser.addOption("Test",     "TestAuto")
+        self.auto_chooser.addOption("!",        "New New Path")
 
         SmartDashboard.putData("Auto Mode", self.auto_chooser)
 

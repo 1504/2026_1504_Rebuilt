@@ -11,7 +11,7 @@ import time
 from src.constants import IntakeDrawerConstants
 
 
-class intakeDrawer(commands2.TrapezoidProfileSubsystem):
+class drawerSubsystem(commands2.TrapezoidProfileSubsystem):
     def __init__(self):
         super().__init__(
             constraints=wpimath.trajectory.TrapezoidProfile.Constraints(
@@ -79,9 +79,7 @@ class intakeDrawer(commands2.TrapezoidProfileSubsystem):
         # print(f'setting goal to {self.goal}')
         self.setGoal(self.goal)
         self.at_goal = False
-        message = f'setting new goal {self.goal:.2f} between {IntakeDrawerConstants.k_min_height:.2f} and {IntakeDrawerConstants.k_max_height:.2f}'
-        print(message)
-
+        
     def get_at_goal(self):
         return self.at_goal
 

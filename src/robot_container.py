@@ -15,11 +15,13 @@ from src.subsystems.intake import IntakeSubsystem
 from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
+from src.subsystems.intake_Drawer import drawerSubsystem
 
 import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
+import src.commands.intakedrawercommands as drawer_command
 
 
 class RobotContainer:
@@ -28,6 +30,7 @@ class RobotContainer:
         self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
         self.intake  = IntakeSubsystem()
+        self.drawer = drawerSubsystem()
         self.climber = ClimberSubsystem()
         self.vision  = LimelightVision(self.drive)
 
@@ -104,6 +107,8 @@ class RobotContainer:
         self.operator.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
         self.operator.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         self.operator.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        self.operator.b().onTrue()
+
         # commands2.button.Trigger(
         #     lambda: self.operator.getLeftTriggerAxis() > 0.5
         # ).whileTrue(climb_cmds.ClimbDownCommand(self.climber))

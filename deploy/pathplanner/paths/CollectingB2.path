@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.467,
-        "y": 4.538
+        "x": 7.493680456490727,
+        "y": 4.895420827389444
       },
       "isLocked": false,
       "linkedName": null
@@ -78,12 +78,8 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.535947712418294,
-      "rotationDegrees": -170.0
-    },
-    {
       "waypointRelativePos": 1.082352941176473,
-      "rotationDegrees": -90.0
+      "rotationDegrees": 90.0
     },
     {
       "waypointRelativePos": 3.2156862745098147,
@@ -113,7 +109,7 @@
   "folder": "Collection",
   "idealStartingState": {
     "velocity": 1.0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

@@ -80,8 +80,8 @@ class DriveSubsystem(commands2.Subsystem):
         )
 
         # ── NT publisher for Limelight heading feed ───────────────
-        # FIXED: create publisher ONCE here instead of every periodic() loop.
-        # Recreating a publisher every 20ms leaks handles and causes NT warnings.
+        # Created once here — recreating a publisher every periodic() loop
+        # leaks handles and generates NT warnings.
         self._ll_orientation_pub = (
             ntcore.NetworkTableInstance.getDefault()
             .getTable(VisionConstants.kLimelightName)
@@ -94,12 +94,16 @@ class DriveSubsystem(commands2.Subsystem):
             config = RobotConfig.fromGUISettings()
         except Exception as e:
             print(f"[Drive] GUI config load failed ({e}), using constants fallback")
+            # FIXED: was passing DriveConstants.kMaxSpeedMps (1.5 m/s) to
+            # maxDriveVelocityMPS, which made PathPlanner's feedforward wrong.
+            # The fallback must use the true hardware ceiling, not the
+            # conservative teleop cap.
             config = RobotConfig(
                 massKG=AutoConstants.kRobotMassKg,
                 MOI=AutoConstants.kRobotMOI,
                 moduleConfig=ModuleConfig(
                     wheelRadiusMeters=DriveConstants.kWheelDiameterMeters / 2,
-                    maxDriveVelocityMPS=DriveConstants.kMaxSpeedMps,
+                    maxDriveVelocityMPS=DriveConstants.kMaxAutoSpeedMps,
                     wheelCOF=AutoConstants.kWheelCOF,
                     driveMotor=wpimath.system.plant.DCMotor.NEO(1),
                     driveCurrentLimit=DriveConstants.kDriveCurrentLimit,
@@ -140,10 +144,7 @@ class DriveSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
-
         # Feed robot heading to Limelight so MegaTag2 can fuse it.
-        # FIXED: use the persistent publisher created in __init__ instead of
-        # calling .publish() here — calling publish() every loop leaks NT handles.
         self._ll_orientation_pub.set([self.gyro.getAngle(), 0.0, 0.0, 0.0, 0.0, 0.0])
 
         self.pose_estimator.update(
@@ -261,7 +262,6 @@ class DriveSubsystem(commands2.Subsystem):
     # PATHPLANNER HELPERS
     # ─────────────────────────────────────────────────────────────
     def _get_chassis_speeds(self) -> wpimath.kinematics.ChassisSpeeds:
-        """Current robot-relative chassis speeds from measured module states."""
         return self.kinematics.toChassisSpeeds(
             (
                 self.front_left.get_state(),
@@ -274,10 +274,8 @@ class DriveSubsystem(commands2.Subsystem):
     def _drive_chassis_speeds(self, speeds: wpimath.kinematics.ChassisSpeeds) -> None:
         """Command chassis speeds directly — called by PathPlanner during auto.
 
-        FIXED: desaturate against kMaxAutoSpeedMps (the true physical max),
-        not the conservative kMaxSpeedMps teleop cap.  Using the teleop cap
-        here means PathPlanner's feedforward math is wrong and the robot
-        undershoots every path segment.
+        Desaturate against kMaxAutoSpeedMps (true hardware ceiling), not the
+        conservative kMaxSpeedMps teleop cap.
         """
         fl, fr, rl, rr = self.kinematics.toSwerveModuleStates(speeds)
         wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
@@ -289,7 +287,6 @@ class DriveSubsystem(commands2.Subsystem):
         self.rear_right.set_desired_state(rr)
 
     def _should_flip_path(self) -> bool:
-        """Mirror paths to the red side of the field when on red alliance."""
         alliance = wpilib.DriverStation.getAlliance()
         return alliance == wpilib.DriverStation.Alliance.kRed
 

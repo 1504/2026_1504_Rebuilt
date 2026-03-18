@@ -92,7 +92,7 @@ class drawerSubsystem(commands2.TrapezoidProfileSubsystem):
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
-        self.counter += 1
+        self.counter =+ 1
         if self.counter % 10 == 0:
             self.position = self.encoder.getPosition()
             self.at_goal = math.fabs(self.position - self.goal) < self.tolerance  # maybe we want to call this an error

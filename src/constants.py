@@ -51,10 +51,10 @@ class DriveConstants:
     kRearLeftChassisOffset   = math.pi
     kRearRightChassisOffset  = math.pi / 2
 
-    kFrontLeftEncoderOffset  = 0.8546
-    kFrontRightEncoderOffset = 0.665
-    kRearLeftEncoderOffset   = 0.803
-    kRearRightEncoderOffset  = 0.1814
+    kFrontLeftEncoderOffset  = 0
+    kFrontRightEncoderOffset = 0
+    kRearLeftEncoderOffset   = 0
+    kRearRightEncoderOffset  = 0
 
     kFrontLeftDriveId  = 11
     kFrontLeftTurnId   = 10

@@ -51,10 +51,12 @@ class DriveConstants:
     kRearLeftChassisOffset   = math.pi
     kRearRightChassisOffset  = math.pi / 2
 
-    kFrontLeftEncoderOffset  = 0
+#change when you change motor
+
+    kFrontLeftEncoderOffset  = 0.988
     kFrontRightEncoderOffset = 0
-    kRearLeftEncoderOffset   = 0
-    kRearRightEncoderOffset  = 0
+    kRearLeftEncoderOffset   = 0.380
+    kRearRightEncoderOffset  = 0.481
 
     kFrontLeftDriveId  = 11
     kFrontLeftTurnId   = 10

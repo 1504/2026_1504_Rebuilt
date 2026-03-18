@@ -3,12 +3,15 @@ Team 1504 - ClimberSubsystem
 Dual SparkMax motors — one leader, one follower (inverted).
 """
 
+import time
+
 import commands2
 from wpilib import SmartDashboard
 import rev
 from rev import SparkMax, SparkMaxConfig
 
 from src.constants import ClimberConstants
+
 
 
 class ClimberSubsystem(commands2.Subsystem):
@@ -60,3 +63,21 @@ class ClimberSubsystem(commands2.Subsystem):
 
     def get_position(self) -> float:
         return self._encoder.getPosition()
+    
+    def levelone(self):
+        self.climb_up()
+        self.start_time = time.time()
+        self.inTime = time.time() + 0.20
+        if time.time() > self.inTime:
+            self.climb_down()
+            if time.time() > self.inTime + 0.20:
+                self.stop()
+    
+    def leveltwo(self):
+        self.climb_up()
+        self.start_time = time.time()
+        self.inTime = time.time() + 0.20
+        if time.time() > self.inTime:
+            self.climb_down()
+            if time.time() > self.inTime + 0.20:
+                self.stop()

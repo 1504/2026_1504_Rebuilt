@@ -67,6 +67,7 @@ import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
+import src.commands.intakedrawercommands as drawer_cmds
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,6 +136,7 @@ class RobotContainer:
         # Intake
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
         d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+        d.rightBumper().whileTrue(drawer_cmds.DrawerCommand(self.drawer))
 
         # Climber — triggers give a natural "squeeze to climb" feel
         d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
@@ -166,6 +168,8 @@ class RobotContainer:
         op.rightTrigger(0.5).whileTrue(shoot_cmds.ShootCommand(self.shooter))
         op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
         op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+
+        op.b().onTrue(climb_cmds.ClimbLevel1(self.climber).andThen(climb_cmds.ClimbLevel2(self.climber)).andThen(climb_cmds.ClimbLevel1(self.climber)))
 
         op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
         op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))

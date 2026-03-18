@@ -43,8 +43,8 @@ class DriveConstants:
     kRotationalSlewRate = 2.0
     kSlowModeMultiplier = 0.3
 
-    kTrackWidth = 0.5715
-    kWheelBase  = 0.5715
+    kTrackWidth = 0.6155
+    kWheelBase  = 0.6155
 
     kFrontLeftChassisOffset  = -math.pi / 2
     kFrontRightChassisOffset = 0.0

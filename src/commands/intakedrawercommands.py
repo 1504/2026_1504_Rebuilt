@@ -6,14 +6,14 @@ import wpilib
 from wpimath.units import inchesToMeters
 import math
 import time
-from src.subsystems.climber import ClimberSubsystem
+from src.subsystems.intake_Drawer import drawerSubsystem as drawer 
 
-class MoveElevator(commands2.Command):  # change the name for your command
+class DrawerCommand(commands2.Command):  # change the name for your command
 
 
     def __init__(self, drawer: drawer, length=inchesToMeters(8), use_dash=True, offset=0, wait_to_finish=False, indent=0) -> None:
         super().__init__()
-        self.setName('Move Elevator')  # change this to something appropriate for this command
+        self.setName('Move Drawer')  # change this to something appropriate for this command
         self.indent = indent
         self.drawer = drawer
 
@@ -62,7 +62,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
         
         end_message = 'Interrupted' if interrupted else 'Ended'
         print_end_message = True
-        end_location = self.drawer.get_length()
+        end_location = self.drawer.get_position()
         msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {end_location:.3f}m  **"
         if print_end_message:
             print(msg)

@@ -83,7 +83,6 @@ class drawerSubsystem(commands2.TrapezoidProfileSubsystem):
     def get_at_goal(self):
         return self.at_goal
 
-
     def set_encoder_position(self, meters: float):
         self.encoder.setPosition(meters)
 

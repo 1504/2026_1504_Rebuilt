@@ -54,7 +54,7 @@ class DriveConstants:
 #change when you change motor
 
     kFrontLeftEncoderOffset  = 0.988
-    kFrontRightEncoderOffset = 0.522
+    kFrontRightEncoderOffset = 0.552
     kRearLeftEncoderOffset   = 0.380
     kRearRightEncoderOffset  = 0.480
 

@@ -61,7 +61,7 @@ from src.subsystems.intake import IntakeSubsystem
 from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
-from src.subsystems.intake_Drawer import drawerSubsystem
+#from src.subsystems.intake_Drawer import drawerSubsystem
 
 import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
@@ -82,7 +82,7 @@ class RobotContainer:
         self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
         self.intake  = IntakeSubsystem()
-        self.drawer = drawerSubsystem()
+#        self.drawer = drawerSubsystem()
         self.climber = ClimberSubsystem()
         self.vision  = LimelightVision(self.drive)
 
@@ -136,7 +136,7 @@ class RobotContainer:
         # Intake
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
         d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
-        d.rightBumper().whileTrue(drawer_cmds.DrawerCommand(self.drawer))
+#        d.rightBumper().whileTrue(drawer_cmds.DrawerCommand(self.drawer))
 
         # Climber — triggers give a natural "squeeze to climb" feel
         d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))

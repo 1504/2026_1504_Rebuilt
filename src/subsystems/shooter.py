@@ -27,20 +27,34 @@ class ShooterSubsystem(commands2.Subsystem):
         self._motor1 = TalonFX(ShooterConstants.kShooterMotor1Id)
         self._motor2 = TalonFX(ShooterConstants.kShooterMotor2Id)
 
-        cfg = TalonFXConfiguration()
+        cfg1 = TalonFXConfiguration()
 
-        cfg.slot0.k_p = ShooterConstants.kShooterP
-        cfg.slot0.k_i = ShooterConstants.kShooterI
-        cfg.slot0.k_d = ShooterConstants.kShooterD
-        cfg.slot0.k_v = ShooterConstants.kShooterKv
+        cfg1.slot0.k_p = ShooterConstants.kShooterP
+        cfg1.slot0.k_i = ShooterConstants.kShooterI
+        cfg1.slot0.k_d = ShooterConstants.kShooterD
+        cfg1.slot0.k_v = ShooterConstants.kShooterKv
 
-        cfg.current_limits.supply_current_limit_enable = True
-        cfg.current_limits.supply_current_limit        = ShooterConstants.kFlywheelCurrentLimit
-        cfg.current_limits.stator_current_limit_enable = True
-        cfg.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
+        cfg1.current_limits.supply_current_limit_enable = True
+        cfg1.current_limits.supply_current_limit        = ShooterConstants.kFlywheelCurrentLimit
+        cfg1.current_limits.stator_current_limit_enable = True
+        cfg1.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
 
-        self._motor1.configurator.apply(cfg)
-        self._motor2.configurator.apply(cfg)
+        self._motor2.configurator.apply(cfg1)
+        
+        cfg2 = TalonFXConfiguration()
+
+        cfg2.slot0.k_p = ShooterConstants.kShooterP
+        cfg2.slot0.k_i = ShooterConstants.kShooterI
+        cfg2.slot0.k_d = ShooterConstants.kShooterD
+        cfg2.slot0.k_v = ShooterConstants.kShooterKv
+
+        cfg2.current_limits.supply_current_limit_enable = True
+        cfg2.current_limits.supply_current_limit        = ShooterConstants.kFlywheelCurrentLimit
+        cfg2.current_limits.stator_current_limit_enable = True
+        cfg2.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
+        cfg2.motor_output.inverted
+        
+        self._motor1.configurator.apply(cfg2)
 
         # Reused every loop to avoid GC pressure
         self._velocity_request = VelocityVoltage(0).with_slot(0).with_enable_foc(True)
@@ -52,9 +66,15 @@ class ShooterSubsystem(commands2.Subsystem):
 
         # ── Feeder motor (SparkMax NEO 550) ───────────────────────
         self._feeder = SparkMax(ShooterConstants.kFeederMotorId, SparkMax.MotorType.kBrushless)
+        self._agitator = SparkMax(ShooterConstants.kAgitatorMotorId, SparkMax.MotorType.kBrushless)
         feeder_cfg = SparkMaxConfig()
         feeder_cfg.smartCurrentLimit(ShooterConstants.kFeederCurrentLimit)
         self._feeder.configure(
+            feeder_cfg,
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters,
+        )
+        self._agitator.configure(
             feeder_cfg,
             rev.ResetMode.kResetSafeParameters,
             rev.PersistMode.kPersistParameters,
@@ -110,9 +130,11 @@ class ShooterSubsystem(commands2.Subsystem):
     # ─────────────────────────────────────────────────────────────
     def run_feeder(self, speed: float | None = None) -> None:
         self._feeder.set(speed if speed is not None else ShooterConstants.kFeederSpeed)
-
+        self._agitator.set(speed if speed is not None else ShooterConstants.kAgitatorSpeed)
+        
     def stop_feeder(self) -> None:
         self._feeder.set(0.0)
+        self._agitator.set(0.0)
 
     def stop_all(self) -> None:
         self.stop_shooter()

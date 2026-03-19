@@ -113,6 +113,7 @@ class ShooterConstants:
     kShooterMotor1Id = 1
     kShooterMotor2Id = 3
     kFeederMotorId   = 16
+    kAgitatorMotorId = 6
 
     kShooterP  = 0.5
     kShooterI  = 0.0
@@ -120,7 +121,8 @@ class ShooterConstants:
     kShooterKv = 0.12
 
     kVelocityToleranceRps = 2.0
-    kFeederSpeed = 0.6
+    kFeederSpeed = -0.4
+    kAgitatorSpeed = -0.15
     kFeederCurrentLimit = 20
     # Supply limit: protects wiring and PDP breaker (what flows in from the battery)
     kFlywheelCurrentLimit = 60
@@ -144,9 +146,9 @@ class IntakeConstants:
 
     kMotorId  = 9          # Leader  (SparkFlex / NEO Vortex)
     kMotorId2 = 15         # Follower (SparkFlex / NEO Vortex) — SET YOUR CAN ID
-    kIntakeSpeed  =  0.8
-    kReverseSpeed = -0.5
-    kCurrentLimit = 5
+    kIntakeSpeed  =  0.15
+    kReverseSpeed = -0.15
+    kCurrentLimit = 70
 
 
 # ─────────────────────────────────────────────────────────────────────────────

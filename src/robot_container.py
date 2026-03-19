@@ -73,7 +73,7 @@ import src.commands.intakedrawercommands as drawer_cmds
 # ─────────────────────────────────────────────────────────────────────────────
 # ← FLIP THIS FLAG BEFORE PLUGGING IN / UNPLUGGING THE OPERATOR CONTROLLER
 # ─────────────────────────────────────────────────────────────────────────────
-SINGLE_CONTROLLER_TEST = True
+SINGLE_CONTROLLER_TEST = False
 
 
 class RobotContainer:

@@ -141,10 +141,12 @@ class ShooterConstants:
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-    kMotorId = 9
-    kIntakeSpeed = 0.8
+
+    kMotorId  = 9          # Leader  (SparkFlex / NEO Vortex)
+    kMotorId2 = 15         # Follower (SparkFlex / NEO Vortex) — SET YOUR CAN ID
+    kIntakeSpeed  =  0.8
     kReverseSpeed = -0.5
-    kCurrentLimit = 40
+    kCurrentLimit = 5
 
 
 # ─────────────────────────────────────────────────────────────────────────────

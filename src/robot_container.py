@@ -26,6 +26,9 @@ SINGLE-CONTROLLER TEST LAYOUT  (one Xbox, port 0)
   Left trigger        → climb down (while held)
   Start               → reset gyro heading
   Back                → lock wheels (X pattern)
+  D-pad Up            → increase shooter velocity by one step
+  D-pad Down          → decrease shooter velocity by one step
+  D-pad Left          → reset shooter velocity to default
 
 ────────────────────────────────────────────────────────────
 TWO-CONTROLLER COMP LAYOUT
@@ -47,6 +50,9 @@ Operator (port 1):
   Left bumper         → reverse intake (while held)
   X                   → climb up (while held)
   Y                   → climb down (while held)
+  D-pad Up            → increase shooter velocity by one step
+  D-pad Down          → decrease shooter velocity by one step
+  D-pad Left          → reset shooter velocity to default
 """
 
 import commands2
@@ -54,7 +60,7 @@ import commands2.button
 import wpilib
 from wpilib import SmartDashboard
 
-from src.constants import OIConstants
+from src.constants import OIConstants, ShooterConstants
 from src.subsystems.drive import DriveSubsystem
 from src.subsystems.shooter import ShooterSubsystem
 from src.subsystems.intake import IntakeSubsystem
@@ -108,6 +114,11 @@ class RobotContainer:
         self.auto_builder = PPAutoBuilder(self.drive, self.shooter, self.intake)
         self._configure_auto_chooser()
 
+        # ── Publish default target RPS so it shows up on dashboard ─
+        SmartDashboard.putNumber(
+            "Shooter/TargetRPS_Adjusted", ShooterConstants.kDefaultShooterRps
+        )
+
         # ── Teleop bindings ───────────────────────────────────────
         self.configure_teleop_bindings()
 
@@ -129,22 +140,26 @@ class RobotContainer:
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
 
         # Shooter
-        d.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))       # spin up + feed
-        d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))      # spin up only
-        d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))  # feed only
+        d.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))
+        d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+        d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
 
         # Intake
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
         d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
-#        d.rightBumper().whileTrue(drawer_cmds.DrawerCommand(self.drawer))
 
-        # Climber — triggers give a natural "squeeze to climb" feel
+        # Climber
         d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
+        # ── Shooter velocity tuning (D-pad) ───────────────────────
+        d.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
+        d.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
+        d.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
+
     # ── Two-controller comp layout ────────────────────────────────
     def _bind_two_controllers(self) -> None:
-        d = self.driver
+        d  = self.driver
         op = self.operator
 
         # ── Driver ────────────────────────────────────────────────
@@ -152,8 +167,6 @@ class RobotContainer:
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
 
-        # Robot-relative drive while right trigger held — useful for
-        # precise alignment maneuvers against a field element
         d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(
                 self.drive,
@@ -169,13 +182,23 @@ class RobotContainer:
         op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
         op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
 
-        op.b().onTrue(climb_cmds.ClimbLevel1(self.climber).andThen(climb_cmds.ClimbLevel2(self.climber)).andThen(climb_cmds.ClimbLevel1(self.climber)))
+        op.b().onTrue(
+            climb_cmds.ClimbLevel1(self.climber)
+            .andThen(climb_cmds.ClimbLevel2(self.climber))
+            .andThen(climb_cmds.ClimbLevel1(self.climber))
+        )
 
         op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
         op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
         op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+
+        # ── Shooter velocity tuning (operator D-pad) ──────────────
+        # Up   → faster   |   Down → slower   |   Left → reset to default
+        op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
+        op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
+        op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
 
     def configure_teleop(self) -> None:
         """Called by teleopInit — resets slew so the robot doesn't jerk on enable."""

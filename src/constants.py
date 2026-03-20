@@ -107,7 +107,7 @@ class DriveConstants:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SHOOTER
+# SHOOTER  (replace the existing ShooterConstants class in constants.py)
 # ─────────────────────────────────────────────────────────────────────────────
 class ShooterConstants:
     kShooterMotor1Id = 1
@@ -124,11 +124,14 @@ class ShooterConstants:
     kFeederSpeed = -0.4
     kAgitatorSpeed = -0.15
     kFeederCurrentLimit = 20
-    # Supply limit: protects wiring and PDP breaker (what flows in from the battery)
     kFlywheelCurrentLimit = 60
-    # Stator limit: protects the motor windings from heat during sustained high torque.
-    # Falcons/Krakens can briefly pull 100+ A stator on a hard stall — cap it here.
     kFlywheelStatorCurrentLimit = 80
+
+    # ── Live velocity tuning (D-pad) ──────────────────────────────
+    kDefaultShooterRps = 10.0   # what "reset" returns to
+    kShooterRpsStep    = 5.0    # how much each D-pad press changes velocity
+    kShooterMinRps     = 10.0   # floor — won't go below this
+    kShooterMaxRps     = 80.0   # ceiling — won't go above this
 
     kShooterTable = [
         (1.5,  35.0),

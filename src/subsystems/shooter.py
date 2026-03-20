@@ -53,7 +53,7 @@ class ShooterSubsystem(commands2.Subsystem):
         cfg2.current_limits.stator_current_limit_enable = True
         cfg2.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
         cfg2.motor_output.inverted
-        cfg2.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE  # or CLOCKWISE_POSITIVE
+        cfg2.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
         self._motor2.configurator.apply(cfg2)
 
         # Reused every loop to avoid GC pressure

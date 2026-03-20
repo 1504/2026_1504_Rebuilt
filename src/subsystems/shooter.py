@@ -17,7 +17,7 @@ import rev
 from rev import SparkMax, SparkMaxConfig
 
 from src.constants import ShooterConstants
-
+from phoenix6.signals import InvertedValue
 
 class ShooterSubsystem(commands2.Subsystem):
     def __init__(self) -> None:
@@ -39,7 +39,7 @@ class ShooterSubsystem(commands2.Subsystem):
         cfg1.current_limits.stator_current_limit_enable = True
         cfg1.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
 
-        self._motor2.configurator.apply(cfg1)
+        self._motor1.configurator.apply(cfg1)
         
         cfg2 = TalonFXConfiguration()
 
@@ -53,8 +53,8 @@ class ShooterSubsystem(commands2.Subsystem):
         cfg2.current_limits.stator_current_limit_enable = True
         cfg2.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
         cfg2.motor_output.inverted
-        
-        self._motor1.configurator.apply(cfg2)
+        cfg2.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE  # or CLOCKWISE_POSITIVE
+        self._motor2.configurator.apply(cfg2)
 
         # Reused every loop to avoid GC pressure
         self._velocity_request = VelocityVoltage(0).with_slot(0).with_enable_foc(True)

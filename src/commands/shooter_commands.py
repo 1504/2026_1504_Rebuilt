@@ -12,7 +12,7 @@ from src.constants import ShooterConstants
 class SpinUpCommand(commands2.Command):
     """Spin the flywheel to a fixed velocity. Runs until interrupted."""
 
-    def __init__(self, shooter: ShooterSubsystem, target_rps: float = 42.0) -> None:
+    def __init__(self, shooter: ShooterSubsystem, target_rps: float = 5.0) -> None:
         super().__init__()
         self._shooter = shooter
         self._target_rps = target_rps

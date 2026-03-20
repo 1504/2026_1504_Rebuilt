@@ -4,44 +4,38 @@ Team 1504 Desperate Penguins - Constants
 """
 
 import math
-from wpimath.units import inchesToMeters, lbsToKilograms
-from rev import ClosedLoopSlot, SparkClosedLoopController
+from wpimath.units import inchesToMeters
 import wpimath.units
-import rev
 import wpimath.trajectory
-from rev import SparkMaxConfig
+from rev import ClosedLoopSlot, SparkMaxConfig
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # OPERATOR INTERFACE
 # ─────────────────────────────────────────────────────────────────────────────
 class OIConstants:
-    kDriverPort = 0
-    kOperatorPort = 1
-    kDriveDeadband = 0.13
-    kRotDeadband = 0.16
-    kSlowModeMultiplier = 0.30
+    kDriverPort          = 0
+    kOperatorPort        = 1
+    kDriveDeadband       = 0.13
+    kRotDeadband         = 0.16
+    kSlowModeMultiplier  = 0.30
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SWERVE DRIVE
 # ─────────────────────────────────────────────────────────────────────────────
 class DriveConstants:
-    # Teleop top speed — intentionally conservative while tuning.
-    # Raise toward kMaxAutoSpeedMps when you're confident in the robot.
-    kMaxSpeedMps = 1.5
+    # Teleop speed cap — conservative while tuning. Raise toward kMaxAutoSpeedMps
+    # once the robot feels stable.
+    kMaxSpeedMps         = 1.5
+    # True hardware ceiling — used for PathPlanner desaturation and fallback config.
+    # Never use kMaxSpeedMps for auto; PP feedforward will be wrong.
+    kMaxAutoSpeedMps     = 4.8
+    kMaxAngularSpeedRps  = 2 * math.pi
 
-    # Physical ceiling used for PathPlanner desaturation and fallback config.
-    # FIXED: auto was desaturating against kMaxSpeedMps (1.5 m/s), which made
-    # PathPlanner's feedforward wrong and caused the robot to undershoot every
-    # path segment.  Always desaturate auto against the real hardware limit.
-    kMaxAutoSpeedMps = 4.8
-
-    kMaxAngularSpeedRps = 2 * math.pi
-
-    kMagnitudeSlewRate  = 3.0
-    kRotationalSlewRate = 2.0
-    kSlowModeMultiplier = 0.3
+    kMagnitudeSlewRate   = 3.0
+    kRotationalSlewRate  = 2.0
+    kSlowModeMultiplier  = 0.3
 
     kTrackWidth = 0.6155
     kWheelBase  = 0.6155
@@ -51,8 +45,9 @@ class DriveConstants:
     kRearLeftChassisOffset   = math.pi
     kRearRightChassisOffset  = math.pi / 2
 
-#change when you change motor
-
+    # ⚠️ VERIFY THESE with REV Hardware Client after any motor swap.
+    # Wrong offsets = modules fighting each other or driving at wrong angles.
+    # To check: put robot on blocks, zero each module in REV client, update below.
     kFrontLeftEncoderOffset  = 0.988
     kFrontRightEncoderOffset = 0.552
     kRearLeftEncoderOffset   = 0.380
@@ -67,19 +62,21 @@ class DriveConstants:
     kRearRightDriveId  = 7
     kRearRightTurnId   = 2
 
-    kDrivePinionTeeth = 14
+    kDrivePinionTeeth       = 14
     kDriveMotorFreeSpeedRps = 5676.0 / 60
-    kWheelDiameterMeters = 0.0762
+    kWheelDiameterMeters    = 0.0762
     kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
-    kDriveMotorReduction = (45.0 * 22) / (kDrivePinionTeeth * 15)
-    kDriveWheelFreeSpeedRps = (kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDriveMotorReduction
+    kDriveMotorReduction    = (45.0 * 22) / (kDrivePinionTeeth * 15)
+    kDriveWheelFreeSpeedRps = (
+        kDriveMotorFreeSpeedRps * kWheelCircumferenceMeters / kDriveMotorReduction
+    )
 
     kDriveEncoderPositionFactor = kWheelCircumferenceMeters / kDriveMotorReduction
     kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0
 
     kTurnEncoderPositionFactor = 2 * math.pi
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
-    kTurnEncoderInverted = True
+    kTurnEncoderInverted       = True
 
     kDriveP  = 0.04
     kDriveI  = 0.0
@@ -99,15 +96,24 @@ class DriveConstants:
     kDriveIdleMode = SparkMaxConfig.IdleMode.kBrake
     kTurnIdleMode  = SparkMaxConfig.IdleMode.kBrake
 
-    kDriveCurrentLimit = 50  # Amps
-    kTurnCurrentLimit  = 20  # Amps
+    kDriveCurrentLimit = 50
+    kTurnCurrentLimit  = 20
 
-    k_start_x = 2.0   # meters from blue alliance wall
-    k_start_y = 4.0   # meters from bottom wall (mid-field height)
+    # The RoboRIO faces LEFT relative to the robot's forward direction.
+    # NavX plugged into MXP reports yaw as if RoboRIO-forward = robot-forward,
+    # so we add -90° to every yaw read to correct for the 90° mounting rotation.
+    # ⚠️ If the robot drives SIDEWAYS on the field after deploying this code,
+    #    flip the sign to +90.0 and redeploy.
+    kGyroMountingOffsetDeg = -90.0
+
+    # Starting pose. PathPlanner's resetOdom:true in .auto files will overwrite
+    # this at auto start — it's only the fallback before the first path runs.
+    k_start_x = 2.0
+    k_start_y = 4.0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SHOOTER  (replace the existing ShooterConstants class in constants.py)
+# SHOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 class ShooterConstants:
     kShooterMotor1Id = 1
@@ -120,25 +126,30 @@ class ShooterConstants:
     kShooterD  = 0.0
     kShooterKv = 0.12
 
-    kVelocityToleranceRps = 2.0
-    kFeederSpeed = -0.4
-    kAgitatorSpeed = -0.15
-    kFeederCurrentLimit = 20
-    kFlywheelCurrentLimit = 60
+    kVelocityToleranceRps       = 2.0
+    kFeederSpeed                = -0.4
+    kAgitatorSpeed              = -0.15
+    kFeederCurrentLimit         = 20
+    kFlywheelCurrentLimit       = 60
     kFlywheelStatorCurrentLimit = 80
 
-    # ── Live velocity tuning (D-pad) ──────────────────────────────
-    kDefaultShooterRps = 10.0   # what "reset" returns to
-    kShooterRpsStep    = 5.0    # how much each D-pad press changes velocity
-    kShooterMinRps     = 10.0   # floor — won't go below this
-    kShooterMaxRps     = 80.0   # ceiling — won't go above this
+    # ── Live velocity tuning via D-pad ────────────────────────────
+    # D-pad Up/Down steps through RPS at practice; Left resets to default.
+    # DriveToShootCommand uses ShootingConstants.kTargetRps as its fixed value,
+    # but ShootCommand/SpinUpCommand use the shared _current_target_rps state
+    # in shooter_commands.py which starts at kDefaultShooterRps.
+    kDefaultShooterRps = 42.0   # what D-pad Left resets to
+    kShooterRpsStep    = 2.0    # how much each D-pad press changes velocity
+    kShooterMinRps     = 10.0   # floor
+    kShooterMaxRps     = 80.0   # ceiling
 
+    # Kept for _interpolate_rps() in shooter.py — not used by DriveToShootCommand.
     kShooterTable = [
-        (1.5,  35.0),
-        (2.0,  40.0),
-        (2.5,  45.0),
-        (3.0,  50.0),
-        (3.5,  55.0),
+        (1.5, 35.0),
+        (2.0, 40.0),
+        (2.5, 45.0),
+        (3.0, 50.0),
+        (3.5, 55.0),
     ]
 
 
@@ -146,9 +157,8 @@ class ShooterConstants:
 # INTAKE
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeConstants:
-
-    kMotorId  = 9          # Leader  (SparkFlex / NEO Vortex)
-    kMotorId2 = 15         # Follower (SparkFlex / NEO Vortex) — SET YOUR CAN ID
+    kMotorId      = 9
+    kMotorId2     = 15
     kIntakeSpeed  =  0.15
     kReverseSpeed = -0.15
     kCurrentLimit = 70
@@ -158,11 +168,11 @@ class IntakeConstants:
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
 class ClimberConstants:
-    kClimberMotorId = 4
+    kClimberMotorId  = 4
     kClimberMotor2Id = 5
-    kClimbSpeed = 0.8
-    kDescendSpeed = -0.5
-    kCurrentLimit = 40
+    kClimbSpeed      =  0.8
+    kDescendSpeed    = -0.5
+    kCurrentLimit    = 40
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -171,91 +181,141 @@ class ClimberConstants:
 class VisionConstants:
     kLimelightName = "limelight"
 
+    # Camera is flat (0° pitch), on the intake face, centered left-right.
+    # Confirmed: lens center is 0.675 m from the floor.
     kCameraHeightMeters = 0.675
-    kCameraPitch        = 0
-    kCameraYaw          = 0.0
+    kCameraPitch        = 0.0   # flat mount — do NOT use TY-based distance
+    kCameraYaw          = 0.0   # centered, no horizontal offset
 
-    kTagHeightMeters = 1.45
+    # Hub tag center height: 44.25 in = 1.124 m per 2026 game manual.
+    kTagHeightMeters = 1.124
 
-    kFieldMinX =  0.0
-    kFieldMaxX = 16.54
-    kFieldMinY =  0.0
-    kFieldMaxY =  8.21
+    # Slightly tightened from field edges — readings at 0.0 are almost always noise.
+    kFieldMinX = 0.5
+    kFieldMaxX = 16.0
+    kFieldMinY = 0.5
+    kFieldMaxY = 7.7
 
-    kSingleTagStdDevs = (4.0, 4.0, 8.0)
-    kMultiTagStdDevs  = (0.5, 0.5, 1.0)
+    # Trust XY at close range. Rotation is always 9999 — MegaTag2 fuses the
+    # gyro for heading, so we never let vision override the gyro's rotation.
+    kSingleTagStdDevs = (0.8, 0.8, 9999.0)
+    kMultiTagStdDevs  = (0.3, 0.3, 9999.0)
 
-    kDistanceScaleFactor = 0.10
+    # Std devs scale up with distance² — inflates uncertainty for far/noisy tags.
+    kDistanceScaleFactor = 0.08
 
-    kMaxVisionSpeedMps = 3.0
+    # Normal speed gate for pose injection.
+    kMaxVisionSpeedMps = 2.5
+    # Over the bump the robot moves fast — accept vision up to this speed but
+    # multiply std devs so the correction is soft, not a sudden pose jump.
+    kBumpCorrectionSpeedMps = 4.5
+    kBumpStdDevMultiplier   = 3.0
 
     kMaxYawErrorDeg = 15.0
 
+    # Hub AprilTag IDs for each alliance. All four Hub faces are tagged.
+    # We filter by alliance to avoid accidentally using the far side's tags.
+    # ⚠️ Confirm these IDs from the 2026 game manual / field layout JSON.
+    kRedHubTagIds  = {2, 3, 4, 5, 8, 9, 10, 11}
+    kBlueHubTagIds = {18, 19, 20, 21, 24, 25, 26, 27}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# AUTONOMOUS  (PathPlanner)
+# SHOOTING
+# ─────────────────────────────────────────────────────────────────────────────
+class ShootingConstants:
+    # Intake, Limelight, and shooter all face the same direction (forward).
+    # Robot drives forward toward the Hub; TX is used for alignment.
+    # Distance is derived from robot pose → Hub tag position (NOT TY geometry,
+    # because camera pitch is 0° and TY is unreliable at shallow angles).
+
+    # ── Tune these on the physical robot ──────────────────────────
+    # Horizontal distance from robot front to the Hub tag face at your chosen
+    # shooting spot. Measure with a tape; affects both approach and flywheel.
+    kTargetDistanceM = 2.0    # MEASURE THIS
+
+    # Flywheel RPS at kTargetDistanceM. Start at 42 and adjust by watching shots.
+    kTargetRps = 42.0         # TUNE THIS
+
+    # ── Alignment tolerances ──────────────────────────────────────
+    kTxToleranceDeg = 2.0     # how centered (in TX degrees) is "good enough"
+    kDistToleranceM = 0.06    # ±6 cm
+
+    # ── Proportional gains ────────────────────────────────────────
+    # kAngleP: output = kAngleP × tx_degrees → rotation speed fraction
+    #   Too high → oscillates. Too low → slow. Start at 0.03.
+    kAngleP = 0.03            # TUNE THIS
+
+    # kDistP: output = kDistP × dist_error_meters → forward speed fraction
+    #   Too high → overshoots. Too low → creeps. Start at 0.40.
+    kDistP  = 0.40            # TUNE THIS
+
+    # ── Output clamps ─────────────────────────────────────────────
+    kMaxAlignSpeed    = 0.35  # max rotation speed fraction
+    kMaxApproachSpeed = 0.45  # max forward speed fraction
+
+    # ── Settle / timeout ──────────────────────────────────────────
+    # Both TX and distance must be within tolerance for this many consecutive
+    # 20 ms loops (~100 ms) before the command declares "at position".
+    kSettleCycles    = 5
+    # Safety: if alignment takes longer than this, shoot anyway.
+    kAlignTimeoutSec = 4.0
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTONOMOUS (PathPlanner)
 # ─────────────────────────────────────────────────────────────────────────────
 class AutoConstants:
-    kPxController = 5.0
-    kPyController = 5.0
-
+    kPxController     = 5.0
+    kPyController     = 5.0
     kPThetaController = 5.0
 
-    # FIXED: was 1.5 (matching the teleop cap), so the fallback RobotConfig
-    # told PathPlanner the robot could only do 1.5 m/s and all feedforward
-    # was scaled wrong.  Match the PathPlanner GUI setting (4.8 m/s).
-    kMaxSpeedMps   = 4.8
-    kMaxAccelMps2  = 5.0
+    kMaxSpeedMps  = 4.8
+    kMaxAccelMps2 = 5.0
 
     kRobotMassKg = 55.0
     kRobotMOI    = 4.5
-
-    kWheelCOF = 1.0
+    kWheelCOF    = 1.0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# INTAKE Drawer
+# INTAKE DRAWER (disabled — subsystem is commented out)
 # ─────────────────────────────────────────────────────────────────────────────
 class IntakeDrawerConstants:
-    kLeftDrawerMotorId  = 19 #Motor is not conneted to a sparkmax.
+    kLeftDrawerMotorId  = 19
     kRightDrawerMotorId = 14
-    
-    kDrawerStartPosition = 0
-    kDrawerDeployedPosition = wpimath.units.inchesToMeters(6) 
 
-    kDrawerEffectivePulleyRadius = 2
+    kDrawerStartPosition    = 0
+    kDrawerDeployedPosition = wpimath.units.inchesToMeters(6)
+
     k_max_acceleration_meter_per_sec_squared = 0.5
-    k_max_velocity_meter_per_second = 0.5
+    k_max_velocity_meter_per_second          = 0.5
     k_name = "intakeDrawer"
 
-    k_kS_volts = 0 # constant to always add, uses the sign of velocity
-    k_kG_volts = 0.88 / 2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
-    k_kV_volt_second_per_radian = 12.05  # stays the same with one or two motors, based on the NEO itself and gear ratio
-    k_kA_volt_second_squared_per_meter = 0.10 / 2.0 # cuts in half with 2 motors
+    k_kS_volts                         = 0
+    k_kG_volts                         = 0.88 / 2.0
+    k_kV_volt_second_per_radian        = 12.05
+    k_kA_volt_second_squared_per_meter = 0.10 / 2.0
 
-    k_gear_ratio = 3 # 9, 12, or 15 gear ratio said victor 1/30/25
-                      # we need it seperate for the sim
-    k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
-    k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio # 2 because our elevator goes twice as fast as the chain because continuous rigging
+    k_gear_ratio                = 3
+    k_effective_pulley_diameter = inchesToMeters(1.91)
+    k_meters_per_revolution     = (
+        math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio
+    )
 
-    k_config = SparkMaxConfig() 
-    k_config.voltageCompensation(12)           
+    k_config = SparkMaxConfig()
+    k_config.voltageCompensation(12)
     k_config.inverted(True)
-
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
-
     k_config.closedLoop.pid(p=1.0, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.outputRange(-1, 1)
-
     k_config.softLimit.forwardSoftLimit(kDrawerDeployedPosition)
     k_config.softLimit.reverseSoftLimit(kDrawerStartPosition)
-
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
-
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
     k_config.smartCurrentLimit(40)
 

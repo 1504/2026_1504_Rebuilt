@@ -1,23 +1,20 @@
 """
 Team 1504 Desperate Penguins - RobotContainer
-Inspired by 6328 Mechanical Advantage's architecture.
+2026 Season
 
 ────────────────────────────────────────────────────────────
-CONTROLLER MODES
+CONTROLLER MODES  (flip SINGLE_CONTROLLER_TEST below)
 ────────────────────────────────────────────────────────────
-Flip the flag below to switch between layouts:
-
-  SINGLE_CONTROLLER_TEST = True   → one Xbox controller, port 0
-  SINGLE_CONTROLLER_TEST = False  → driver (port 0) + operator (port 1)
+SINGLE_CONTROLLER_TEST = True   → one Xbox, port 0
+SINGLE_CONTROLLER_TEST = False  → driver (port 0) + operator (port 1)
 
 ────────────────────────────────────────────────────────────
-SINGLE-CONTROLLER TEST LAYOUT  (one Xbox, port 0)
+SINGLE-CONTROLLER TEST LAYOUT
 ────────────────────────────────────────────────────────────
   Left stick          → translate (field-relative)
   Right stick X       → rotate
   Left bumper (hold)  → slow mode
-
-  A                   → shoot (spin up + feed while held)
+  A                   → align to Hub + shoot (hold)
   B                   → intake (while held)
   X                   → reverse intake (while held)
   Y                   → spin up flywheel only (while held)
@@ -43,13 +40,14 @@ Driver (port 0):
   Back                → vision snap to target
 
 Operator (port 1):
-  Right trigger       → shoot (spin up + feed while held)
+  Right trigger       → align to Hub + shoot (full auto, hold to run)
   Right bumper        → feed only (while held)
   A                   → spin up flywheel only (while held)
   Left trigger        → intake (while held)
   Left bumper         → reverse intake (while held)
   X                   → climb up (while held)
   Y                   → climb down (while held)
+  B                   → climb sequence (level 1 → 2 → 1)
   D-pad Up            → increase shooter velocity by one step
   D-pad Down          → decrease shooter velocity by one step
   D-pad Left          → reset shooter velocity to default
@@ -60,25 +58,24 @@ import commands2.button
 import wpilib
 from wpilib import SmartDashboard
 
-from src.constants import OIConstants, ShooterConstants
+from src.constants import OIConstants, ShooterConstants, ShootingConstants
 from src.subsystems.drive import DriveSubsystem
 from src.subsystems.shooter import ShooterSubsystem
 from src.subsystems.intake import IntakeSubsystem
 from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
-#from src.subsystems.intake_Drawer import drawerSubsystem
+# from src.subsystems.intake_Drawer import drawerSubsystem
 
 import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
 import src.commands.intakedrawercommands as drawer_cmds
+from src.commands.drive_to_shoot_command import DriveToShootCommand
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ← FLIP THIS FLAG BEFORE PLUGGING IN / UNPLUGGING THE OPERATOR CONTROLLER
-# ─────────────────────────────────────────────────────────────────────────────
+# ← FLIP THIS before plugging in / unplugging the operator controller
 SINGLE_CONTROLLER_TEST = False
 
 
@@ -88,13 +85,13 @@ class RobotContainer:
         self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
         self.intake  = IntakeSubsystem()
-#        self.drawer = drawerSubsystem()
+        # self.drawer = drawerSubsystem()
         self.climber = ClimberSubsystem()
+        # Vision constructed after drive so it can hold a reference to it
         self.vision  = LimelightVision(self.drive)
 
         # ── Controllers ───────────────────────────────────────────
         self.driver = commands2.button.CommandXboxController(OIConstants.kDriverPort)
-
         if not SINGLE_CONTROLLER_TEST:
             self.operator = commands2.button.CommandXboxController(OIConstants.kOperatorPort)
 
@@ -111,10 +108,13 @@ class RobotContainer:
         )
 
         # ── Auto builder ──────────────────────────────────────────
-        self.auto_builder = PPAutoBuilder(self.drive, self.shooter, self.intake)
+        # vision is passed in so DriveToShootCommand works in named commands
+        self.auto_builder = PPAutoBuilder(
+            self.drive, self.shooter, self.intake, self.vision
+        )
         self._configure_auto_chooser()
 
-        # ── Publish default target RPS so it shows up on dashboard ─
+        # Publish default RPS so dashboard shows it on startup
         SmartDashboard.putNumber(
             "Shooter/TargetRPS_Adjusted", ShooterConstants.kDefaultShooterRps
         )
@@ -131,33 +131,32 @@ class RobotContainer:
         else:
             self._bind_two_controllers()
 
-    # ── Single-controller test layout ────────────────────────────
     def _bind_single_controller(self) -> None:
         d = self.driver
 
-        # Drive utilities
         d.back().onTrue(drive_cmds.SetXCommand(self.drive))
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
 
-        # Shooter
-        d.a().whileTrue(shoot_cmds.ShootCommand(self.shooter))
+        # A: align to Hub then shoot. whileTrue means releasing A cancels both
+        # and the scheduler restores TeleopDriveCommand automatically.
+        d.a().whileTrue(
+            DriveToShootCommand(self.drive, self.vision)
+            .andThen(shoot_cmds.ShootCommand(self.shooter))
+        )
         d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
         d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
 
-        # Intake
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
         d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
-        # Climber
         d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
-        # ── Shooter velocity tuning (D-pad) ───────────────────────
+        # D-pad: live shooter velocity tuning
         d.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
         d.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
         d.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
 
-    # ── Two-controller comp layout ────────────────────────────────
     def _bind_two_controllers(self) -> None:
         d  = self.driver
         op = self.operator
@@ -178,7 +177,12 @@ class RobotContainer:
         )
 
         # ── Operator ──────────────────────────────────────────────
-        op.rightTrigger(0.5).whileTrue(shoot_cmds.ShootCommand(self.shooter))
+        # Right trigger: full automatic align + shoot.
+        # Releasing the trigger cancels both commands immediately.
+        op.rightTrigger(0.5).whileTrue(
+            DriveToShootCommand(self.drive, self.vision)
+            .andThen(shoot_cmds.ShootCommand(self.shooter))
+        )
         op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
         op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
 
@@ -194,14 +198,13 @@ class RobotContainer:
         op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
-        # ── Shooter velocity tuning (operator D-pad) ──────────────
-        # Up   → faster   |   Down → slower   |   Left → reset to default
+        # D-pad: operator adjusts shooter velocity live during match
         op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
         op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
         op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
 
     def configure_teleop(self) -> None:
-        """Called by teleopInit — resets slew so the robot doesn't jerk on enable."""
+        """Called by teleopInit — clears stale slew state so first input is smooth."""
         self.drive.reset_slew()
 
     # ─────────────────────────────────────────────────────────────

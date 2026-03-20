@@ -188,8 +188,6 @@ class AutoShootCommand(commands2.Command):
                 self._timer.reset()
                 self._timer.start()
             self._shooter.run_feeder()
-        else:
-            self._shooter.stop_feeder()
 
     def end(self, interrupted: bool) -> None:
         self._timer.stop()

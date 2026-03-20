@@ -1,6 +1,12 @@
 """
 Team 1504 - DriveSubsystem
 MAXSwerve with NavX gyro + PathPlanner auto integration.
+
+NavX mounting: RoboRIO faces LEFT relative to robot forward. Every gyro read
+goes through _corrected_yaw_deg() / _corrected_rotation2d() which apply
+kGyroMountingOffsetDeg. Never read self.gyro directly outside these two helpers.
+
+⚠️ If robot drives sideways after deploying: flip kGyroMountingOffsetDeg sign.
 """
 
 import math
@@ -10,14 +16,12 @@ import wpimath.kinematics
 from wpimath.kinematics import ChassisSpeeds
 import wpimath.estimator
 import wpimath.filter
-import wpimath.units
 import wpimath.system.plant
 import navx
 import commands2
 from wpilib import Field2d, SmartDashboard
 import ntcore
 
-# PathPlanner
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import RobotConfig, PIDConstants, ModuleConfig
 from pathplannerlib.controller import PPHolonomicDriveController
@@ -66,22 +70,23 @@ class DriveSubsystem(commands2.Subsystem):
 
         # ── Gyro ──────────────────────────────────────────────────
         self.gyro = navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
+        # NavX takes ~1 s to calibrate on power-up. The pose estimator starts
+        # with a slightly wrong heading — vision corrects it once tags are seen.
 
         # ── Pose estimator ────────────────────────────────────────
         self.pose_estimator = wpimath.estimator.SwerveDrive4PoseEstimator(
             self.kinematics,
-            self.gyro.getRotation2d(),
+            self._corrected_rotation2d(),
             self._get_module_positions(),
             initialPose=wpimath.geometry.Pose2d(
                 DriveConstants.k_start_x,
                 DriveConstants.k_start_y,
-                self.gyro.getRotation2d(),
+                self._corrected_rotation2d(),
             ),
         )
 
-        # ── NT publisher for Limelight heading feed ───────────────
-        # Created once here — recreating a publisher every periodic() loop
-        # leaks handles and generates NT warnings.
+        # ── NT publisher for Limelight MegaTag2 heading feed ─────
+        # Created once here — creating a publisher every periodic() leaks NT handles.
         self._ll_orientation_pub = (
             ntcore.NetworkTableInstance.getDefault()
             .getTable(VisionConstants.kLimelightName)
@@ -94,10 +99,6 @@ class DriveSubsystem(commands2.Subsystem):
             config = RobotConfig.fromGUISettings()
         except Exception as e:
             print(f"[Drive] GUI config load failed ({e}), using constants fallback")
-            # FIXED: was passing DriveConstants.kMaxSpeedMps (1.5 m/s) to
-            # maxDriveVelocityMPS, which made PathPlanner's feedforward wrong.
-            # The fallback must use the true hardware ceiling, not the
-            # conservative teleop cap.
             config = RobotConfig(
                 massKG=AutoConstants.kRobotMassKg,
                 MOI=AutoConstants.kRobotMOI,
@@ -121,6 +122,8 @@ class DriveSubsystem(commands2.Subsystem):
             self.get_pose,
             self.reset_pose,
             self._get_chassis_speeds,
+            # feedforwards arg is discarded — PP 2025 provides them but applying
+            # them requires per-module voltage control not yet wired up here.
             lambda speeds, feedforwards: self._drive_chassis_speeds(speeds),
             PPHolonomicDriveController(
                 PIDConstants(AutoConstants.kPxController, 0.0, 0.0),
@@ -131,7 +134,7 @@ class DriveSubsystem(commands2.Subsystem):
             self,
         )
 
-        # ── Per-axis slew rate limiters ───────────────────────────
+        # ── Slew rate limiters ────────────────────────────────────
         self._x_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._y_limiter   = wpimath.filter.SlewRateLimiter(DriveConstants.kMagnitudeSlewRate)
         self._rot_limiter = wpimath.filter.SlewRateLimiter(DriveConstants.kRotationalSlewRate)
@@ -141,22 +144,38 @@ class DriveSubsystem(commands2.Subsystem):
         SmartDashboard.putData("Field", self.field)
 
     # ─────────────────────────────────────────────────────────────
+    # GYRO HELPERS — use these everywhere, never call self.gyro directly
+    # ─────────────────────────────────────────────────────────────
+    def _corrected_yaw_deg(self) -> float:
+        """Returns NavX yaw corrected for the 90° RoboRIO mounting offset.
+        Uses getYaw() (not getAngle()) so it resets cleanly on zero_heading()."""
+        return self.gyro.getYaw() + DriveConstants.kGyroMountingOffsetDeg
+
+    def _corrected_rotation2d(self) -> wpimath.geometry.Rotation2d:
+        return wpimath.geometry.Rotation2d.fromDegrees(self._corrected_yaw_deg())
+
+    # ─────────────────────────────────────────────────────────────
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
-        # Feed robot heading to Limelight so MegaTag2 can fuse it.
-        self._ll_orientation_pub.set([self.gyro.getAngle(), 0.0, 0.0, 0.0, 0.0, 0.0])
+        # Feed corrected heading to Limelight for MegaTag2 gyro fusion.
+        # Format expected by LL: [yaw_deg, yawRate, pitch, pitchRate, roll, rollRate]
+        self._ll_orientation_pub.set([
+            self._corrected_yaw_deg(),
+            self.gyro.getRate(),   # deg/s — NavX provides this directly
+            0.0, 0.0, 0.0, 0.0
+        ])
 
         self.pose_estimator.update(
-            self.gyro.getRotation2d(),
+            self._corrected_rotation2d(),
             self._get_module_positions(),
         )
         pose = self.pose_estimator.getEstimatedPosition()
         self.field.setRobotPose(pose)
 
-        SmartDashboard.putNumber("Drive/HeadingDeg", self.gyro.getAngle())
-        SmartDashboard.putNumber("Drive/PoseX", pose.X())
-        SmartDashboard.putNumber("Drive/PoseY", pose.Y())
+        SmartDashboard.putNumber("Drive/HeadingDeg", self._corrected_yaw_deg())
+        SmartDashboard.putNumber("Drive/PoseX",      pose.X())
+        SmartDashboard.putNumber("Drive/PoseY",      pose.Y())
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING
@@ -170,19 +189,16 @@ class DriveSubsystem(commands2.Subsystem):
         rate_limit: bool = True,
     ) -> None:
         if rate_limit:
-            x_speed_commanded, y_speed_commanded = self._apply_rate_limit(x_speed, y_speed)
+            x_speed, y_speed = self._apply_rate_limit(x_speed, y_speed)
             rot = self._rot_limiter.calculate(rot)
-        else:
-            x_speed_commanded = x_speed
-            y_speed_commanded = y_speed
 
-        x_mps   = x_speed_commanded * DriveConstants.kMaxSpeedMps
-        y_mps   = y_speed_commanded * DriveConstants.kMaxSpeedMps
-        rot_rps = rot * DriveConstants.kMaxAngularSpeedRps
+        x_mps   = x_speed * DriveConstants.kMaxSpeedMps
+        y_mps   = y_speed * DriveConstants.kMaxSpeedMps
+        rot_rps = rot     * DriveConstants.kMaxAngularSpeedRps
 
         chassis_speeds = (
             wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
-                x_mps, y_mps, rot_rps, self.gyro.getRotation2d()
+                x_mps, y_mps, rot_rps, self._corrected_rotation2d()
             )
             if field_relative
             else wpimath.kinematics.ChassisSpeeds(x_mps, y_mps, rot_rps)
@@ -227,7 +243,7 @@ class DriveSubsystem(commands2.Subsystem):
 
     def reset_pose(self, pose: wpimath.geometry.Pose2d) -> None:
         self.pose_estimator.resetPosition(
-            self.gyro.getRotation2d(),
+            self._corrected_rotation2d(),
             self._get_module_positions(),
             pose,
         )
@@ -239,10 +255,7 @@ class DriveSubsystem(commands2.Subsystem):
         std_devs: tuple[float, float, float] | None = None,
     ) -> None:
         if std_devs:
-            self.pose_estimator.addVisionMeasurement(
-                pose, timestamp,
-                (std_devs[0], std_devs[1], std_devs[2])
-            )
+            self.pose_estimator.addVisionMeasurement(pose, timestamp, std_devs)
         else:
             self.pose_estimator.addVisionMeasurement(pose, timestamp)
 
@@ -250,33 +263,28 @@ class DriveSubsystem(commands2.Subsystem):
         self.gyro.reset()
 
     def get_heading_degrees(self) -> float:
-        return self.gyro.getAngle()
+        return self._corrected_yaw_deg()
 
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
-        return self.gyro.getRotation2d()
+        return self._corrected_rotation2d()
 
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._get_chassis_speeds()
 
     # ─────────────────────────────────────────────────────────────
-    # PATHPLANNER HELPERS
+    # PATHPLANNER INTERNALS
     # ─────────────────────────────────────────────────────────────
     def _get_chassis_speeds(self) -> wpimath.kinematics.ChassisSpeeds:
-        return self.kinematics.toChassisSpeeds(
-            (
-                self.front_left.get_state(),
-                self.front_right.get_state(),
-                self.rear_left.get_state(),
-                self.rear_right.get_state(),
-            )
-        )
+        return self.kinematics.toChassisSpeeds((
+            self.front_left.get_state(),
+            self.front_right.get_state(),
+            self.rear_left.get_state(),
+            self.rear_right.get_state(),
+        ))
 
     def _drive_chassis_speeds(self, speeds: wpimath.kinematics.ChassisSpeeds) -> None:
-        """Command chassis speeds directly — called by PathPlanner during auto.
-
-        Desaturate against kMaxAutoSpeedMps (true hardware ceiling), not the
-        conservative kMaxSpeedMps teleop cap.
-        """
+        """Called by PathPlanner during auto. Desaturates against the true hardware
+        ceiling (kMaxAutoSpeedMps), not the conservative teleop cap."""
         fl, fr, rl, rr = self.kinematics.toSwerveModuleStates(speeds)
         wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
             (fl, fr, rl, rr), DriveConstants.kMaxAutoSpeedMps
@@ -287,12 +295,8 @@ class DriveSubsystem(commands2.Subsystem):
         self.rear_right.set_desired_state(rr)
 
     def _should_flip_path(self) -> bool:
-        alliance = wpilib.DriverStation.getAlliance()
-        return alliance == wpilib.DriverStation.Alliance.kRed
+        return wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed
 
-    # ─────────────────────────────────────────────────────────────
-    # INTERNAL HELPERS
-    # ─────────────────────────────────────────────────────────────
     def _get_module_positions(self):
         return (
             self.front_left.get_position(),
@@ -301,8 +305,5 @@ class DriveSubsystem(commands2.Subsystem):
             self.rear_right.get_position(),
         )
 
-    def _apply_rate_limit(self, x_speed: float, y_speed: float) -> tuple[float, float]:
-        return (
-            self._x_limiter.calculate(x_speed),
-            self._y_limiter.calculate(y_speed),
-        )
+    def _apply_rate_limit(self, x: float, y: float) -> tuple[float, float]:
+        return self._x_limiter.calculate(x), self._y_limiter.calculate(y)

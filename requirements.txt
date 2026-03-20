@@ -18,7 +18,7 @@ pyntcore==2026.2.1.1
 pytest==9.02
 pytest-reraise==2.1.2
 robotpy==2026.2.1
-robotpy-apriltag==2026.2.1
+robotpy-apriltag==2026.2.2
 robotpy-cli==2026.0.0
 robotpy-commands-v2==2026.2.1
 robotpy-hal==2026.2.1.1

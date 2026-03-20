@@ -26,4 +26,5 @@ requires = [
     "phoenix6",
     "pynetconsole",
     "pynetworktables",
+    "robotpy_apriltag"
 ]

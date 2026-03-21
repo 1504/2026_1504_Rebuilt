@@ -6,7 +6,7 @@
 [tool.robotpy]
 # Version of robotpy this project depends on
 team_number = 1504
-robotpy_version = "2026.2.1.1"
+robotpy_version = "2026.2.2"
 
 # specifies the method of testing
 isolated = true
@@ -26,5 +26,6 @@ requires = [
     "phoenix6",
     "pynetconsole",
     "pynetworktables",
-    "robotpy_apriltag"
+    "robotpy_apriltag",
+    "robotpy-pathplannerlib"
 ]

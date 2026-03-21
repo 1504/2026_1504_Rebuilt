@@ -27,7 +27,7 @@ class OIConstants:
 class DriveConstants:
     # Teleop speed cap — conservative while tuning. Raise toward kMaxAutoSpeedMps
     # once the robot feels stable.
-    kMaxSpeedMps         = 1.5
+    kMaxSpeedMps         = 4.8
     # True hardware ceiling — used for PathPlanner desaturation and fallback config.
     # Never use kMaxSpeedMps for auto; PP feedforward will be wrong.
     kMaxAutoSpeedMps     = 4.8

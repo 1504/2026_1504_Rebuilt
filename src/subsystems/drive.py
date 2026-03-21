@@ -176,6 +176,7 @@ class DriveSubsystem(commands2.Subsystem):
         SmartDashboard.putNumber("Drive/HeadingDeg", self._corrected_yaw_deg())
         SmartDashboard.putNumber("Drive/PoseX",      pose.X())
         SmartDashboard.putNumber("Drive/PoseY",      pose.Y())
+        SmartDashboard.putNumber("Drive/RawYaw", self.gyro.getYaw())
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING

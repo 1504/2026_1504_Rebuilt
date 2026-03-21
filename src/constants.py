@@ -104,7 +104,7 @@ class DriveConstants:
     # so we add -90° to every yaw read to correct for the 90° mounting rotation.
     # ⚠️ If the robot drives SIDEWAYS on the field after deploying this code,
     #    flip the sign to +90.0 and redeploy.
-    kGyroMountingOffsetDeg = -90.0
+    kGyroMountingOffsetDeg = 0
 
     # Starting pose. PathPlanner's resetOdom:true in .auto files will overwrite
     # this at auto start — it's only the fallback before the first path runs.

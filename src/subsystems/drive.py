@@ -213,7 +213,9 @@ class DriveSubsystem(commands2.Subsystem):
         self.front_right.set_desired_state(fr)
         self.rear_left.set_desired_state(rl)
         self.rear_right.set_desired_state(rr)
-
+        SmartDashboard.putNumber("fl speed",fl.speed) 
+        SmartDashboard.putNumber("fl actual", self.front_left.get_state().speed) 
+        
     def set_x(self) -> None:
         self.front_left.set_desired_state(
             wpimath.kinematics.SwerveModuleState(0, wpimath.geometry.Rotation2d(math.pi / 4))

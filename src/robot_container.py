@@ -65,6 +65,7 @@ from src.subsystems.intake import IntakeSubsystem
 from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
+from src.subsystems.intake_Drawer import drawerSubsystem
 # from src.subsystems.intake_Drawer import drawerSubsystem
 
 import src.commands.drive_commands as drive_cmds
@@ -85,6 +86,7 @@ class RobotContainer:
         self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
         self.intake  = IntakeSubsystem()
+        self.intake_Drawer = drawerSubsystem()
         # self.drawer = drawerSubsystem()
         self.climber = ClimberSubsystem()
         # Vision constructed after drive so it can hold a reference to it
@@ -165,6 +167,8 @@ class RobotContainer:
         d.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
+        d.povUp().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
+        d.povDown().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
 
         d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(

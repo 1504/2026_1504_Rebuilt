@@ -78,10 +78,11 @@ class DriveConstants:
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
     kTurnEncoderInverted       = True
 
-    kDriveP  = 0.04
+    kDriveP  = 0.5
     kDriveI  = 0.0
     kDriveD  = 0.0
-    kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
+    #kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
+    kDriveFF= 1.5
 
     kTurnP  = 2.0
     kTurnI  = 0.0
@@ -108,8 +109,8 @@ class DriveConstants:
 
     # Starting pose. PathPlanner's resetOdom:true in .auto files will overwrite
     # this at auto start — it's only the fallback before the first path runs.
-    k_start_x = 2.0
-    k_start_y = 4.0
+    k_start_x = 0
+    k_start_y = 0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -284,38 +285,10 @@ class AutoConstants:
 class IntakeDrawerConstants:
     kLeftDrawerMotorId  = 19
     kRightDrawerMotorId = 14
-
-    kDrawerStartPosition    = 0
-    kDrawerDeployedPosition = wpimath.units.inchesToMeters(6)
-
-    k_max_acceleration_meter_per_sec_squared = 0.5
-    k_max_velocity_meter_per_second          = 0.5
-    k_name = "intakeDrawer"
-
-    k_kS_volts                         = 0
-    k_kG_volts                         = 0.88 / 2.0
-    k_kV_volt_second_per_radian        = 12.05
-    k_kA_volt_second_squared_per_meter = 0.10 / 2.0
-
-    k_gear_ratio                = 3
-    k_effective_pulley_diameter = inchesToMeters(1.91)
-    k_meters_per_revolution     = (
-        math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio
-    )
-
+    
     k_config = SparkMaxConfig()
-    k_config.voltageCompensation(12)
+
     k_config.inverted(True)
-    k_config.encoder.positionConversionFactor(k_meters_per_revolution)
-    k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
-    k_config.closedLoop.pid(p=1.0, i=0, d=0, slot=ClosedLoopSlot(0))
-    k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
-    k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
-    k_config.closedLoop.outputRange(-1, 1)
-    k_config.softLimit.forwardSoftLimit(kDrawerDeployedPosition)
-    k_config.softLimit.reverseSoftLimit(kDrawerStartPosition)
-    k_config.softLimit.forwardSoftLimitEnabled(True)
-    k_config.softLimit.reverseSoftLimitEnabled(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
     k_config.smartCurrentLimit(40)
 

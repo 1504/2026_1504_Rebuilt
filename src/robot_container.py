@@ -220,6 +220,7 @@ class RobotContainer:
         self.auto_chooser.addOption("R3",       "Red Three")
         self.auto_chooser.addOption("Test",     "TestAuto")
         self.auto_chooser.addOption("!",        "New New Path")
+        self.auto_chooser.addOption("Defense",        "Defense1")
 
         SmartDashboard.putData("Auto Mode", self.auto_chooser)
 

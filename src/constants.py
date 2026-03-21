@@ -29,7 +29,7 @@ class OIConstants:
 class DriveConstants:
     # Teleop top speed — intentionally conservative while tuning.
     # Raise toward kMaxAutoSpeedMps when you're confident in the robot.
-    kMaxSpeedMps = 1.5
+    kMaxSpeedMps = 4.8
 
     # Physical ceiling used for PathPlanner desaturation and fallback config.
     # FIXED: auto was desaturating against kMaxSpeedMps (1.5 m/s), which made
@@ -149,7 +149,7 @@ class IntakeConstants:
 
     kMotorId  = 9          # Leader  (SparkFlex / NEO Vortex)
     kMotorId2 = 15         # Follower (SparkFlex / NEO Vortex) — SET YOUR CAN ID
-    kIntakeSpeed  =  0.15
+    kIntakeSpeed  =  0.50
     kReverseSpeed = -0.15
     kCurrentLimit = 70
 

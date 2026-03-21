@@ -40,12 +40,6 @@
               }
             ]
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "ClimbingR1"
-          }
         }
       ]
     }

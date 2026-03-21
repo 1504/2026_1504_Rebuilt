@@ -37,24 +37,6 @@
                 "data": {
                   "pathName": "CollectingB1"
                 }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.0
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "ClimbingB1"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Climb"
-                }
               }
             ]
           }

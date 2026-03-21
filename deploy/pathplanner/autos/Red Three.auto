@@ -37,12 +37,6 @@
                 "data": {
                   "waitTime": 3.0
                 }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "ClimbingR3"
-                }
               }
             ]
           }

@@ -6,7 +6,7 @@ import wpilib
 from wpimath.units import inchesToMeters
 import math
 import time
-
+from wpilib import SmartDashboard
 
 from src.constants import IntakeDrawerConstants
 
@@ -37,3 +37,6 @@ class drawerSubsystem(commands2.Subsystem):
         self.rightDrawerMotor.set(0)
         self.leftDrawerMotor.set(0)
         pass
+    def periodic(self) -> None:
+        SmartDashboard.putNumber("drawer pose", self.rightDrawerMotor.getEncoder().getPosition())
+        SmartDashboard.putNumber("left-right drawer dist", self.leftDrawerMotor.getEncoder().getPosition()-self.rightDrawerMotor.getEncoder().getPosition())

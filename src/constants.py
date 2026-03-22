@@ -293,5 +293,5 @@ class IntakeDrawerConstants:
     k_config.smartCurrentLimit(40)
 
     k_follower_config = SparkMaxConfig()
-    k_follower_config.follow(kRightDrawerMotorId, invert=True)
+    k_follower_config.follow(kLeftDrawerMotorId, invert=True)
     k_follower_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)

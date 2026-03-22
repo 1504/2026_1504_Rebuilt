@@ -167,8 +167,8 @@ class RobotContainer:
         d.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
-        d.povUp().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
-        d.povDown().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
+        op.start().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
+        op.back().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
 
         d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(

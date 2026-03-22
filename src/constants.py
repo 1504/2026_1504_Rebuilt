@@ -285,13 +285,19 @@ class AutoConstants:
 class IntakeDrawerConstants:
     kLeftDrawerMotorId  = 19
     kRightDrawerMotorId = 14
-    
-    k_config = SparkMaxConfig()
 
+    # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
+    # Start at 0.7 and increase until it stops binding.
+    kBaseSpeed       = 0.05
+    kRightSpeedScale = 2.7   # <-- TUNE THIS
+
+    k_config = SparkMaxConfig()
     k_config.inverted(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_config.smartCurrentLimit(40)
+    k_config.smartCurrentLimit(10)
 
-    k_follower_config = SparkMaxConfig()
-    k_follower_config.follow(kLeftDrawerMotorId, invert=True)
-    k_follower_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    # Remove the follow config entirely — we're driving both motors directly
+    k_right_config = SparkMaxConfig()
+    k_right_config.inverted(False)  # opposite direction from left
+    k_right_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    k_right_config.smartCurrentLimit(10)

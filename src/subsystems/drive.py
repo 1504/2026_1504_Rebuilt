@@ -269,7 +269,7 @@ class DriveSubsystem(commands2.Subsystem):
         return self._corrected_yaw_deg()
 
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
-        return self._corrected_rotation2d()
+        return self._corrected_rotation2d()*-1 + wpimath.geometry.Rotation2d.fromDegrees(-90)
 
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._get_chassis_speeds()

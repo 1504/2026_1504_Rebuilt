@@ -53,14 +53,14 @@ class DriveConstants:
     kRearLeftEncoderOffset   = 0.380
     kRearRightEncoderOffset  = 0.480
 
-    kFrontLeftDriveId  = 11
-    kFrontLeftTurnId   = 10
-    kFrontRightDriveId = 13
-    kFrontRightTurnId  = 12
-    kRearLeftDriveId   = 17
-    kRearLeftTurnId    = 18
+    kFrontLeftDriveId  = 1
+    kFrontLeftTurnId   = 2
+    kFrontRightDriveId = 3
+    kFrontRightTurnId  = 4
+    kRearLeftDriveId   = 5
+    kRearLeftTurnId    = 6
     kRearRightDriveId  = 7
-    kRearRightTurnId   = 2
+    kRearRightTurnId   = 8
 
     kDrivePinionTeeth       = 14
     kDriveMotorFreeSpeedRps = 5676.0 / 60

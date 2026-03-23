@@ -60,12 +60,12 @@ from wpilib import SmartDashboard
 
 from src.constants import OIConstants, ShooterConstants, ShootingConstants
 from src.subsystems.drive import DriveSubsystem
-from src.subsystems.shooter import ShooterSubsystem
-from src.subsystems.intake import IntakeSubsystem
-from src.subsystems.climber import ClimberSubsystem
+# from src.subsystems.shooter import ShooterSubsystem
+# from src.subsystems.intake import IntakeSubsystem
+# from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
-from src.subsystems.intake_Drawer import drawerSubsystem
+# from src.subsystems.intake_Drawer import drawerSubsystem
 # from src.subsystems.intake_Drawer import drawerSubsystem
 
 import src.commands.drive_commands as drive_cmds
@@ -73,7 +73,7 @@ import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
 import src.commands.climb_commands as climb_cmds
 import src.commands.intakedrawercommands as drawer_cmds
-from src.commands.drive_to_shoot_command import DriveToShootCommand
+# from src.commands.drive_to_shoot_command import DriveToShootCommand
 
 
 # ← FLIP THIS before plugging in / unplugging the operator controller
@@ -84,11 +84,11 @@ class RobotContainer:
     def __init__(self) -> None:
         # ── Subsystems ────────────────────────────────────────────
         self.drive   = DriveSubsystem()
-        self.shooter = ShooterSubsystem()
-        self.intake  = IntakeSubsystem()
-        self.intake_Drawer = drawerSubsystem()
-        # self.drawer = drawerSubsystem()
-        self.climber = ClimberSubsystem()
+        # self.shooter = ShooterSubsystem()
+        # self.intake  = IntakeSubsystem()
+        # self.intake_Drawer = drawerSubsystem()
+        # # self.drawer = drawerSubsystem()
+        # self.climber = ClimberSubsystem()
         # Vision constructed after drive so it can hold a reference to it
         self.vision  = LimelightVision(self.drive)
 
@@ -111,9 +111,9 @@ class RobotContainer:
 
         # ── Auto builder ──────────────────────────────────────────
         # vision is passed in so DriveToShootCommand works in named commands
-        self.auto_builder = PPAutoBuilder(
-            self.drive, self.shooter, self.intake, self.vision
-        )
+        # self.auto_builder = PPAutoBuilder(
+        #     self.drive, self.shooter, self.intake, self.vision
+        # )
         self._configure_auto_chooser()
 
         # Publish default RPS so dashboard shows it on startup
@@ -140,24 +140,24 @@ class RobotContainer:
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
 
         # A: align to Hub then shoot. whileTrue means releasing A cancels both
-        # and the scheduler restores TeleopDriveCommand automatically.
-        d.a().whileTrue(
-            DriveToShootCommand(self.drive, self.vision)
-            .andThen(shoot_cmds.ShootCommand(self.shooter))
-        )
-        d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
-        d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
+        # # and the scheduler restores TeleopDriveCommand automatically.
+        # d.a().whileTrue(
+        #     DriveToShootCommand(self.drive, self.vision)
+        #     .andThen(shoot_cmds.ShootCommand(self.shooter))
+        # )
+        # d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+        # d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
 
-        d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
-        d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+        # d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
+        # d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
-        d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        # d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        # d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
-        # D-pad: live shooter velocity tuning
-        d.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
-        d.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
-        d.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
+        # # D-pad: live shooter velocity tuning
+        # d.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
+        # d.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
+        # d.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
 
     def _bind_two_controllers(self) -> None:
         d  = self.driver
@@ -167,8 +167,8 @@ class RobotContainer:
         d.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
-        op.start().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
-        op.back().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
+        # op.start().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
+        # op.back().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
 
         d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(
@@ -183,29 +183,29 @@ class RobotContainer:
         # ── Operator ──────────────────────────────────────────────
         # Right trigger: full automatic align + shoot.
         # Releasing the trigger cancels both commands immediately.
-        op.rightTrigger(0.5).whileTrue(
-            DriveToShootCommand(self.drive, self.vision)
-            .andThen(shoot_cmds.ShootCommand(self.shooter))
-        )
-        op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
-        op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+        # op.rightTrigger(0.5).whileTrue(
+        #     DriveToShootCommand(self.drive, self.vision)
+        #     .andThen(shoot_cmds.ShootCommand(self.shooter))
+        # )
+        # op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
+        # op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
 
-        op.b().onTrue(
-            climb_cmds.ClimbLevel1(self.climber)
-            .andThen(climb_cmds.ClimbLevel2(self.climber))
-            .andThen(climb_cmds.ClimbLevel1(self.climber))
-        )
+        # op.b().onTrue(
+        #     climb_cmds.ClimbLevel1(self.climber)
+        #     .andThen(climb_cmds.ClimbLevel2(self.climber))
+        #     .andThen(climb_cmds.ClimbLevel1(self.climber))
+        # )
 
-        op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
-        op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+        # op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
+        # op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
-        op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        # op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        # op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
-        # D-pad: operator adjusts shooter velocity live during match
-        op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
-        op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
-        op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
+        # # D-pad: operator adjusts shooter velocity live during match
+        # op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
+        # op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
+        # op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
 
     def configure_teleop(self) -> None:
         """Called by teleopInit — clears stale slew state so first input is smooth."""
@@ -232,4 +232,5 @@ class RobotContainer:
 
     def get_autonomous_command(self) -> commands2.Command | None:
         selected = self.auto_chooser.getSelected()
-        return self.auto_builder.build(selected)
+        # return self.auto_builder.build(selected)
+        pass

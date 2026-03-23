@@ -1,68 +1,68 @@
-"""
-Team 1504 - Climb Commands
-"""
+# """
+# Team 1504 - Climb Commands
+# """
 
-import commands2
-from src.subsystems.climber import ClimberSubsystem
-
-
-class ClimbUpCommand(commands2.Command):
-    def __init__(self, climber: ClimberSubsystem) -> None:
-        super().__init__()
-        self._climber = climber
-        self.addRequirements(climber)
-
-    def execute(self) -> None:
-        self._climber.climb_up()
-
-    def end(self, interrupted: bool) -> None:
-        self._climber.stop()
-
-    def isFinished(self) -> bool:
-        return False
+# import commands2
+# from src.subsystems.climber import ClimberSubsystem
 
 
-class ClimbDownCommand(commands2.Command):
-    def __init__(self, climber: ClimberSubsystem) -> None:
-        super().__init__()
-        self._climber = climber
-        self.addRequirements(climber)
+# class ClimbUpCommand(commands2.Command):
+#     def __init__(self, climber: ClimberSubsystem) -> None:
+#         super().__init__()
+#         self._climber = climber
+#         self.addRequirements(climber)
 
-    def execute(self) -> None:
-        self._climber.climb_down()
+#     def execute(self) -> None:
+#         self._climber.climb_up()
 
-    def end(self, interrupted: bool) -> None:
-        self._climber.stop()
+#     def end(self, interrupted: bool) -> None:
+#         self._climber.stop()
 
-    def isFinished(self) -> bool:
-        return False
+#     def isFinished(self) -> bool:
+#         return False
 
-class ClimbLevel1(commands2.Command):
-    def __init__(self, climber: ClimberSubsystem) -> None:
-        super().__init__()
-        self._climber = climber
-        self.addRequirements(climber)
 
-    def execute(self) -> None:
-        self._climber.levelone()
+# class ClimbDownCommand(commands2.Command):
+#     def __init__(self, climber: ClimberSubsystem) -> None:
+#         super().__init__()
+#         self._climber = climber
+#         self.addRequirements(climber)
 
-    def end(self, interrupted: bool) -> None:
-        self._climber.stop()
+#     def execute(self) -> None:
+#         self._climber.climb_down()
 
-    def isFinished(self) -> bool:
-        return False
+#     def end(self, interrupted: bool) -> None:
+#         self._climber.stop()
 
-class ClimbLevel2(commands2.Command):
-    def __init__(self, climber: ClimberSubsystem) -> None:
-        super().__init__()
-        self._climber = climber
-        self.addRequirements(climber)
+#     def isFinished(self) -> bool:
+#         return False
 
-    def execute(self) -> None:
-        self._climber.leveltwo()
+# class ClimbLevel1(commands2.Command):
+#     def __init__(self, climber: ClimberSubsystem) -> None:
+#         super().__init__()
+#         self._climber = climber
+#         self.addRequirements(climber)
 
-    def end(self, interrupted: bool) -> None:
-        self._climber.stop()
+#     def execute(self) -> None:
+#         self._climber.levelone()
 
-    def isFinished(self) -> bool:
-        return False
+#     def end(self, interrupted: bool) -> None:
+#         self._climber.stop()
+
+#     def isFinished(self) -> bool:
+#         return False
+
+# class ClimbLevel2(commands2.Command):
+#     def __init__(self, climber: ClimberSubsystem) -> None:
+#         super().__init__()
+#         self._climber = climber
+#         self.addRequirements(climber)
+
+#     def execute(self) -> None:
+#         self._climber.leveltwo()
+
+#     def end(self, interrupted: bool) -> None:
+#         self._climber.stop()
+
+#     def isFinished(self) -> bool:
+#         return False

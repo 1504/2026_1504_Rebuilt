@@ -177,6 +177,9 @@ class DriveSubsystem(commands2.Subsystem):
         SmartDashboard.putNumber("Drive/PoseX",      pose.X())
         SmartDashboard.putNumber("Drive/PoseY",      pose.Y())
         SmartDashboard.putNumber("Drive/RawYaw", self.gyro.getYaw())
+        SmartDashboard.putNumber("x", self.gyro.getRawGyroX())
+        SmartDashboard.putNumber("y", self.gyro.getRawGyroY())
+        SmartDashboard.putNumber("z", self.gyro.getRawGyroZ())
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING

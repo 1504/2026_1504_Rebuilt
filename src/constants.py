@@ -122,10 +122,10 @@ class ShooterConstants:
     kFeederMotorId   = 16
     kAgitatorMotorId = 6
 
-    kShooterP  = 0.5
+    kShooterP  = 0.83
     kShooterI  = 0.0
     kShooterD  = 0.0
-    kShooterKv = 0.12
+    kShooterKv = 0.11
 
     kVelocityToleranceRps       = 20.0
     kFeederSpeed                = -0.6
@@ -288,16 +288,16 @@ class IntakeDrawerConstants:
 
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
-    kBaseSpeed       = 0.1
+    kBaseSpeed       = 0.15
     kRightSpeedScale = 1 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_config.smartCurrentLimit(10)
+    k_config.smartCurrentLimit(5)
 
     # Remove the follow config entirely — we're driving both motors directly
     k_right_config = SparkMaxConfig()
-    k_right_config.inverted(False)  # opposite direction from left
+    k_right_config.inverted(True)  # opposite direction from left
     k_right_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_right_config.smartCurrentLimit(10)
+    k_right_config.smartCurrentLimit(5)

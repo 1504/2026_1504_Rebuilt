@@ -122,8 +122,6 @@ class ShooterConstants:
     kFeederMotorId   = 16
     kAgitatorMotorId = 6
 
-    setKShooterMotor1ID = inverted = True  # follow motor must be inverted if wired in opposite direction
-
     kShooterP  = 0.5
     kShooterI  = 0.0
     kShooterD  = 0.0

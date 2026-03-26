@@ -81,8 +81,8 @@ class DriveConstants:
     kDriveP  = 0.5
     kDriveI  = 0.0
     kDriveD  = 0.0
-    #kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
-    kDriveFF= 1.5
+    kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
+    #kDriveFF= 1.5
 
     kTurnP  = 2.0
     kTurnI  = 0.0
@@ -121,6 +121,8 @@ class ShooterConstants:
     kShooterMotor2Id = 3
     kFeederMotorId   = 16
     kAgitatorMotorId = 6
+
+    setKShooterMotor1ID = inverted = True  # follow motor must be inverted if wired in opposite direction
 
     kShooterP  = 0.5
     kShooterI  = 0.0

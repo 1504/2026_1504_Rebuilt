@@ -180,6 +180,10 @@ class DriveSubsystem(commands2.Subsystem):
         SmartDashboard.putNumber("x", self.gyro.getRawGyroX())
         SmartDashboard.putNumber("y", self.gyro.getRawGyroY())
         SmartDashboard.putNumber("z", self.gyro.getRawGyroZ())
+        SmartDashboard.putNumber("angle", self.gyro.getAngle())
+        SmartDashboard.putNumber("pressure", self.gyro.getBarometricPressure())
+        SmartDashboard.putNumber("pitch", self.gyro.getPitch())
+        SmartDashboard.putNumber("roll", self.gyro.getRoll())
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING

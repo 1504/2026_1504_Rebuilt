@@ -149,7 +149,7 @@ class DriveSubsystem(commands2.Subsystem):
     def _corrected_yaw_deg(self) -> float:
         """Returns NavX yaw corrected for the 90° RoboRIO mounting offset.
         Uses getYaw() (not getAngle()) so it resets cleanly on zero_heading()."""
-        return self.gyro.getYaw() + DriveConstants.kGyroMountingOffsetDeg
+        return -self.gyro.getYaw() + DriveConstants.kGyroMountingOffsetDeg
 
     def _corrected_rotation2d(self) -> wpimath.geometry.Rotation2d:
         return wpimath.geometry.Rotation2d.fromDegrees(self._corrected_yaw_deg())

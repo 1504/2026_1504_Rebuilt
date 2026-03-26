@@ -289,7 +289,7 @@ class IntakeDrawerConstants:
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
     kBaseSpeed       = 0.05
-    kRightSpeedScale = 2.7   # <-- TUNE THIS
+    kRightSpeedScale = 0.6 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)

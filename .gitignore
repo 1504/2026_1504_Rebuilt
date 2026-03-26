@@ -1,6 +1,10 @@
 __pycache__/
-.pytest_chache/
+.pytest_cache/
 .wpilib/
 tests/
 ctre_sim/
 .vscode/
+ctre_sim/
+ctre_sim\Talon FX vers. C - 01 - 0 - ext.dat/
+ctre_sim\Talon FX vers. C - 03 - 0 - ext.dat/
+vendordeps/

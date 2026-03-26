@@ -72,7 +72,8 @@ class FeedCommand(commands2.Command):
 
 class ShootCommand(commands2.Command):
     """
-    Spin up flywheel to current shared target velocity, then feed once at speed.
+    Spin up flywheel to current shared target velocity and run feeder.
+    No speed gate — feeder runs immediately alongside the flywheel.
     Runs indefinitely until button is released.
     """
 
@@ -86,7 +87,6 @@ class ShootCommand(commands2.Command):
         self._shooter.stop_feeder()
 
     def execute(self) -> None:
-        # Re-apply each loop so live adjustments take effect while held
         self._shooter.set_velocity_rps(get_shooter_rps())
         self._shooter.run_feeder()
 
@@ -104,8 +104,6 @@ class IncreaseShooterVelocityCommand(commands2.InstantCommand):
     """
 
     def __init__(self, shooter: ShooterSubsystem) -> None:
-        # No subsystem requirement — this only touches module state,
-        # not the hardware, so it won't interrupt SpinUp/Shoot commands.
         super().__init__(lambda: self._adjust(shooter))
 
     def _adjust(self, shooter: ShooterSubsystem) -> None:
@@ -149,12 +147,9 @@ class ResetShooterVelocityCommand(commands2.InstantCommand):
 
 class AutoShootCommand(commands2.Command):
     """
-    Autonomous shoot: spin up, wait for speed, feed for duration, then finish.
-    Uses the shared target RPS so pit adjustments carry into auto as well.
-
-    FIXED: previously incremented a float counter by 0.02 each loop, which
-    drifts whenever the loop runs late (brownout, CAN delays, etc.).
-    Now uses wpilib.Timer for accurate wall-clock measurement.
+    Autonomous shoot: spin up and feed for duration, then finish.
+    No speed gate — feeder runs immediately. Uses wpilib.Timer for
+    accurate wall-clock measurement.
     """
 
     def __init__(
@@ -165,33 +160,26 @@ class AutoShootCommand(commands2.Command):
     ) -> None:
         super().__init__()
         self._shooter = shooter
-        # If an explicit RPS is given (e.g. from auto builder), use it;
-        # otherwise fall back to whatever the operator dialled in.
         self._explicit_rps = target_rps
         self._feed_duration = feed_duration_sec
-        self._feeding = False
         self._timer = wpilib.Timer()
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
         rps = self._explicit_rps if self._explicit_rps is not None else get_shooter_rps()
         self._shooter.set_velocity_rps(rps)
-        self._shooter.stop_feeder()
-        self._feeding = False
         self._timer.reset()
-        self._timer.stop()
+        self._timer.start()
 
     def execute(self) -> None:
-        if self._shooter.is_at_speed():
-            if not self._feeding:
-                self._feeding = True
-                self._timer.reset()
-                self._timer.start()
-            self._shooter.run_feeder()
+        # Keep commanding velocity every loop so PID stays active
+        rps = self._explicit_rps if self._explicit_rps is not None else get_shooter_rps()
+        self._shooter.set_velocity_rps(rps)
+        self._shooter.run_feeder()
 
     def end(self, interrupted: bool) -> None:
         self._timer.stop()
         self._shooter.stop_all()
 
     def isFinished(self) -> bool:
-        return self._feeding and self._timer.hasElapsed(self._feed_duration)
+        return self._timer.hasElapsed(self._feed_duration)

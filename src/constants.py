@@ -127,10 +127,10 @@ class ShooterConstants:
     kShooterD  = 0.0
     kShooterKv = 0.12
 
-    kVelocityToleranceRps       = 2.0
-    kFeederSpeed                = -0.4
-    kAgitatorSpeed              = -0.15
-    kFeederCurrentLimit         = 20
+    kVelocityToleranceRps       = 20.0
+    kFeederSpeed                = -0.6
+    kAgitatorSpeed              = -0.6
+    kFeederCurrentLimit         = 60
     kFlywheelCurrentLimit       = 60
     kFlywheelStatorCurrentLimit = 80
 
@@ -139,7 +139,7 @@ class ShooterConstants:
     # DriveToShootCommand uses ShootingConstants.kTargetRps as its fixed value,
     # but ShootCommand/SpinUpCommand use the shared _current_target_rps state
     # in shooter_commands.py which starts at kDefaultShooterRps.
-    kDefaultShooterRps = 42.0   # what D-pad Left resets to
+    kDefaultShooterRps = 70.0   # what D-pad Left resets to
     kShooterRpsStep    = 2.0    # how much each D-pad press changes velocity
     kShooterMinRps     = 10.0   # floor
     kShooterMaxRps     = 80.0   # ceiling
@@ -289,7 +289,7 @@ class IntakeDrawerConstants:
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
     kBaseSpeed       = 0.05
-    kRightSpeedScale = 0.6 # < - - tune
+    kRightSpeedScale = 0.33 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)

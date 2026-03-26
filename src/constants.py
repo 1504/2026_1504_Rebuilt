@@ -37,8 +37,8 @@ class DriveConstants:
     kRotationalSlewRate  = 2.0
     kSlowModeMultiplier  = 0.3
 
-    kTrackWidth = 0.6155
-    kWheelBase  = 0.6155
+    kTrackWidth = 0.63
+    kWheelBase  = 0.63
 
     kFrontLeftChassisOffset  = -math.pi / 2
     kFrontRightChassisOffset = 0.0
@@ -78,7 +78,7 @@ class DriveConstants:
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
     kTurnEncoderInverted       = True
 
-    kDriveP  = 0.5
+    kDriveP  = 0.4
     kDriveI  = 0.0
     kDriveD  = 0.0
     kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
@@ -168,12 +168,12 @@ class IntakeConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
-class ClimberConstants:
-    kClimberMotorId  = 4
-    kClimberMotor2Id = 5
-    kClimbSpeed      =  0.8
-    kDescendSpeed    = -0.5
-    kCurrentLimit    = 40
+# class ClimberConstants:
+#     kClimberMotorId  = 4
+#     kClimberMotor2Id = 5
+#     kClimbSpeed      =  0.8
+#     kDescendSpeed    = -0.5
+#     kCurrentLimit    = 40
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ class ShootingConstants:
     kTargetRps = 42.0         # TUNE THIS
 
     # ── Alignment tolerances ──────────────────────────────────────
-    kTxToleranceDeg = 2.0     # how centered (in TX degrees) is "good enough"
+    kTxToleranceDeg = 8.0     # how centered (in TX degrees) is "good enough"
     kDistToleranceM = 0.06    # ±6 cm
 
     # ── Proportional gains ────────────────────────────────────────
@@ -288,8 +288,8 @@ class IntakeDrawerConstants:
 
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
-    kBaseSpeed       = 0.05
-    kRightSpeedScale = 0.33 # < - - tune
+    kBaseSpeed       = 0.1
+    kRightSpeedScale = 1 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)

@@ -62,7 +62,7 @@ from src.constants import OIConstants, ShooterConstants, ShootingConstants
 from src.subsystems.drive import DriveSubsystem
 from src.subsystems.shooter import ShooterSubsystem
 from src.subsystems.intake import IntakeSubsystem
-from src.subsystems.climber import ClimberSubsystem
+# from src.subsystems.climber import ClimberSubsystem
 from src.vision.limelight import LimelightVision
 from src.auto.auto_builder import PPAutoBuilder
 from src.subsystems.drawer import drawerSubsystem
@@ -88,7 +88,7 @@ class RobotContainer:
         self.intake  = IntakeSubsystem()
         self.intake_Drawer = drawerSubsystem()
         # self.drawer = drawerSubsystem()
-        self.climber = ClimberSubsystem()
+        # self.climber = ClimberSubsystem()
         # Vision constructed after drive so it can hold a reference to it
         self.vision  = LimelightVision(self.drive)
 
@@ -151,8 +151,8 @@ class RobotContainer:
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
         d.x().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
-        d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        # d.rightTrigger(0.5).whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        # d.leftTrigger(0.5).whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
         # D-pad: live shooter velocity tuning
         d.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
@@ -190,17 +190,17 @@ class RobotContainer:
         op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
         op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
 
-        op.b().onTrue(
-            climb_cmds.ClimbLevel1(self.climber)
-            .andThen(climb_cmds.ClimbLevel2(self.climber))
-            .andThen(climb_cmds.ClimbLevel1(self.climber))
-        )
+        # op.b().onTrue(
+        #     climb_cmds.ClimbLevel1(self.climber)
+        #     .andThen(climb_cmds.ClimbLevel2(self.climber))
+        #     .andThen(climb_cmds.ClimbLevel1(self.climber))
+        # )
 
         op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
         op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
 
-        op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
-        op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
+        # op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
+        # op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
 
         # D-pad: operator adjusts shooter velocity live during match
         op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))

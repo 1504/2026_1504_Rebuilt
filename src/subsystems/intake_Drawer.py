@@ -13,34 +13,30 @@ from src.constants import IntakeDrawerConstants
 
 class drawerSubsystem(commands2.Subsystem):
     def __init__(self):
+        
         self.leftDrawerMotor = rev.SparkMax(IntakeDrawerConstants.kLeftDrawerMotorId, rev.SparkMax.MotorType.kBrushless)
         self.rightDrawerMotor = rev.SparkMax(IntakeDrawerConstants.kRightDrawerMotorId, rev.SparkMax.MotorType.kBrushless)
+        self.sparks = [self.leftDrawerMotor, self.rightDrawerMotor]
 
-        rev_resets = rev.ResetMode.kResetSafeParameters
+        IntakeDrawerConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+        IntakeDrawerConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+        
+        rev_resets = rev.ResetMode.kResetSafeParameters    
         rev_persists = rev.PersistMode.kPersistParameters
 
         self.leftDrawerMotor.configure(IntakeDrawerConstants.k_config, rev_resets, rev_persists)
-        self.rightDrawerMotor.configure(IntakeDrawerConstants.k_right_config, rev_resets, rev_persists)
-
-        self._left_speed  = IntakeDrawerConstants.kBaseSpeed
-        self._right_speed = IntakeDrawerConstants.kBaseSpeed * IntakeDrawerConstants.kRightSpeedScale
-
+        self.rightDrawerMotor.configure(IntakeDrawerConstants.k_follower_config, rev_resets, rev_persists)       
+        self.sped=0.05
     def outhop(self):
-        self.leftDrawerMotor.set(self._left_speed)
-        self.rightDrawerMotor.set(self._right_speed)
-
+        self.leftDrawerMotor.set(self.sped)
+        self.rightDrawerMotor.set(self.sped)
     def inhop(self):
-        self.leftDrawerMotor.set(-self._left_speed)
-        self.rightDrawerMotor.set(-self._right_speed)
-
+        self.rightDrawerMotor.set(-self.sped)
+        self.leftDrawerMotor.set(-self.sped)
     def stopmotor(self):
-        self.leftDrawerMotor.set(0)
         self.rightDrawerMotor.set(0)
-
+        self.leftDrawerMotor.set(0)
+        pass
     def periodic(self) -> None:
         SmartDashboard.putNumber("drawer pose", self.rightDrawerMotor.getEncoder().getPosition())
-        SmartDashboard.putNumber("left-right drawer dist",
-            self.leftDrawerMotor.getEncoder().getPosition() - self.rightDrawerMotor.getEncoder().getPosition())
-        # Watch this value — it tells you how far out of sync they're getting
-        SmartDashboard.putNumber("drawer/LeftSpeed",  self._left_speed)
-        SmartDashboard.putNumber("drawer/RightSpeed", self._right_speed)
+        SmartDashboard.putNumber("left-right drawer dist", self.leftDrawerMotor.getEncoder().getPosition()-self.rightDrawerMotor.getEncoder().getPosition())

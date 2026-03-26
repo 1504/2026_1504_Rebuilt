@@ -177,6 +177,13 @@ class DriveSubsystem(commands2.Subsystem):
         SmartDashboard.putNumber("Drive/PoseX",      pose.X())
         SmartDashboard.putNumber("Drive/PoseY",      pose.Y())
         SmartDashboard.putNumber("Drive/RawYaw", self.gyro.getYaw())
+        SmartDashboard.putNumber("x", self.gyro.getRawGyroX())
+        SmartDashboard.putNumber("y", self.gyro.getRawGyroY())
+        SmartDashboard.putNumber("z", self.gyro.getRawGyroZ())
+        SmartDashboard.putNumber("angle", self.gyro.getAngle())
+        SmartDashboard.putNumber("pressure", self.gyro.getBarometricPressure())
+        SmartDashboard.putNumber("pitch", self.gyro.getPitch())
+        SmartDashboard.putNumber("roll", self.gyro.getRoll())
 
     # ─────────────────────────────────────────────────────────────
     # DRIVING
@@ -269,10 +276,11 @@ class DriveSubsystem(commands2.Subsystem):
         return self._corrected_yaw_deg()
 
     def get_rotation2d(self) -> wpimath.geometry.Rotation2d:
-        return self._corrected_rotation2d()*-1 + wpimath.geometry.Rotation2d.fromDegrees(-90)
+        return self._corrected_rotation2d()#*-1 + wpimath.geometry.Rotation2d.fromDegrees(-90)
 
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._get_chassis_speeds()
+    
 
     # ─────────────────────────────────────────────────────────────
     # PATHPLANNER INTERNALS

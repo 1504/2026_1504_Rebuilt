@@ -37,8 +37,8 @@ class DriveConstants:
     kRotationalSlewRate  = 2.0
     kSlowModeMultiplier  = 0.3
 
-    kTrackWidth = 0.63
-    kWheelBase  = 0.63
+    kTrackWidth = 0.6155
+    kWheelBase  = 0.6155
 
     kFrontLeftChassisOffset  = -math.pi / 2
     kFrontRightChassisOffset = 0.0
@@ -78,11 +78,10 @@ class DriveConstants:
     kTurnEncoderVelocityFactor = (2 * math.pi) / 60.0
     kTurnEncoderInverted       = True
 
-    kDriveP  = 0.4
+    kDriveP  = 0.5
     kDriveI  = 0.0
     kDriveD  = 0.0
     kDriveFF = 1.0 / kDriveWheelFreeSpeedRps
-    #kDriveFF= 1.5
 
     kTurnP  = 2.0
     kTurnI  = 0.0
@@ -122,24 +121,32 @@ class ShooterConstants:
     kFeederMotorId   = 16
     kAgitatorMotorId = 6
 
-    kShooterP  = 0.83
+    kShooterP  = 0.5
     kShooterI  = 0.0
     kShooterD  = 0.0
-    kShooterKv = 0.11
+    kShooterKv = 0.12
 
     kVelocityToleranceRps       = 20.0
     kFeederSpeed                = -0.6
     kAgitatorSpeed              = -0.6
-    kFeederCurrentLimit         = 60
+
+    # ── Current limits ────────────────────────────────────────────
+    # NEO 550 (feeder + agitator): safe continuous limit is ~20 A.
+    # The previous 60 A limit allowed large current spikes during ball intake
+    # that shared the power rail with the flywheel TalonFX motors, causing
+    # the flywheels to stop spinning when a ball was loaded.
+    kFeederCurrentLimit         = 60   # was 60 — NEO 550 safe limit
+    kAgitatorCurrentLimit       = 20   # separate so each can be tuned independently
+
+    # TalonFX flywheel supply + stator limits.
+    # supply_current_lower_limit (40 A sustain) is applied in shooter.py after
+    # 0.5 s of high draw so the motors don't brown out the rail mid-recovery.
     kFlywheelCurrentLimit       = 60
     kFlywheelStatorCurrentLimit = 80
 
     # ── Live velocity tuning via D-pad ────────────────────────────
     # D-pad Up/Down steps through RPS at practice; Left resets to default.
-    # DriveToShootCommand uses ShootingConstants.kTargetRps as its fixed value,
-    # but ShootCommand/SpinUpCommand use the shared _current_target_rps state
-    # in shooter_commands.py which starts at kDefaultShooterRps.
-    kDefaultShooterRps = 70.0   # what D-pad Left resets to
+    kDefaultShooterRps = 40.0   # what D-pad Left resets to
     kShooterRpsStep    = 2.0    # how much each D-pad press changes velocity
     kShooterMinRps     = 10.0   # floor
     kShooterMaxRps     = 80.0   # ceiling
@@ -168,12 +175,12 @@ class IntakeConstants:
 # ─────────────────────────────────────────────────────────────────────────────
 # CLIMBER
 # ─────────────────────────────────────────────────────────────────────────────
-# class ClimberConstants:
-#     kClimberMotorId  = 4
-#     kClimberMotor2Id = 5
-#     kClimbSpeed      =  0.8
-#     kDescendSpeed    = -0.5
-#     kCurrentLimit    = 40
+class ClimberConstants:
+    kClimberMotorId  = 4
+    kClimberMotor2Id = 5
+    kClimbSpeed      =  0.8
+    kDescendSpeed    = -0.5
+    kCurrentLimit    = 40
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -231,24 +238,17 @@ class ShootingConstants:
     # because camera pitch is 0° and TY is unreliable at shallow angles).
 
     # ── Tune these on the physical robot ──────────────────────────
-    # Horizontal distance from robot front to the Hub tag face at your chosen
-    # shooting spot. Measure with a tape; affects both approach and flywheel.
     kTargetDistanceM = 2.0    # MEASURE THIS
 
     # Flywheel RPS at kTargetDistanceM. Start at 42 and adjust by watching shots.
     kTargetRps = 42.0         # TUNE THIS
 
     # ── Alignment tolerances ──────────────────────────────────────
-    kTxToleranceDeg = 8.0     # how centered (in TX degrees) is "good enough"
+    kTxToleranceDeg = 2.0     # how centered (in TX degrees) is "good enough"
     kDistToleranceM = 0.06    # ±6 cm
 
     # ── Proportional gains ────────────────────────────────────────
-    # kAngleP: output = kAngleP × tx_degrees → rotation speed fraction
-    #   Too high → oscillates. Too low → slow. Start at 0.03.
     kAngleP = 0.03            # TUNE THIS
-
-    # kDistP: output = kDistP × dist_error_meters → forward speed fraction
-    #   Too high → overshoots. Too low → creeps. Start at 0.40.
     kDistP  = 0.40            # TUNE THIS
 
     # ── Output clamps ─────────────────────────────────────────────
@@ -256,10 +256,7 @@ class ShootingConstants:
     kMaxApproachSpeed = 0.45  # max forward speed fraction
 
     # ── Settle / timeout ──────────────────────────────────────────
-    # Both TX and distance must be within tolerance for this many consecutive
-    # 20 ms loops (~100 ms) before the command declares "at position".
     kSettleCycles    = 5
-    # Safety: if alignment takes longer than this, shoot anyway.
     kAlignTimeoutSec = 4.0
 
 
@@ -288,16 +285,16 @@ class IntakeDrawerConstants:
 
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
-    kBaseSpeed       = 0.15
-    kRightSpeedScale = 1 # < - - tune
+    kBaseSpeed       = 0.05
+    kRightSpeedScale = 0.33 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_config.smartCurrentLimit(5)
+    k_config.smartCurrentLimit(10)
 
     # Remove the follow config entirely — we're driving both motors directly
     k_right_config = SparkMaxConfig()
-    k_right_config.inverted(True)  # opposite direction from left
+    k_right_config.inverted(False)  # opposite direction from left
     k_right_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_right_config.smartCurrentLimit(5)
+    k_right_config.smartCurrentLimit(10)

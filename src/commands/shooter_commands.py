@@ -33,23 +33,31 @@ def reset_shooter_rps() -> None:
 class SpinUpCommand(commands2.Command):
     """Spin the flywheel to the current shared target velocity. Runs until interrupted."""
 
-    def __init__(self, shooter: ShooterSubsystem) -> None:
+    def __init__(self, shooter: ShooterSubsystem, start: bool) -> None:
         super().__init__()
         self._shooter = shooter
+        self._start = start
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
+        SmartDashboard.putString("SpinCommandState", "Inited")
         self._shooter.set_velocity_rps(get_shooter_rps())
 
     def execute(self) -> None:
-        # Re-apply each loop so live adjustments take effect immediately
-        self._shooter.set_velocity_rps(get_shooter_rps())
+        if self._start:
+            # Re-apply each loop so live adjustments take effect immediately
+            # self._shooter.set_velocity_rps(get_shooter_rps())
+            self._shooter.run_at_sd_velocity()
+            SmartDashboard.putString("SpinCommandState", "Running")
+        else:
+            self._shooter.stop_shooter()
+            SmartDashboard.putString("SpinCommandState", "Stopped")
 
     def end(self, interrupted: bool) -> None:
-        self._shooter.stop_shooter()
-
+        pass
+        
     def isFinished(self) -> bool:
-        return False
+        return True
 
 
 class FeedCommand(commands2.Command):
@@ -72,25 +80,55 @@ class FeedCommand(commands2.Command):
 
 class ShootCommand(commands2.Command):
     """
-    Spin up flywheel to current shared target velocity and run feeder.
-    No speed gate — feeder runs immediately alongside the flywheel.
-    Runs indefinitely until button is released.
+    Spin up flywheel to current shared target velocity, wait for it to be
+    stable at speed for SETTLE_LOOPS consecutive loops, then latch the feeder on.
+
+    Once feeding starts the latch stays open even if velocity dips — stopping
+    mid-shot causes jams. The flywheel keeps being commanded every loop so the
+    PID continues fighting to recover speed while the ball passes through.
     """
+
+    # 10 loops × 20 ms = 200 ms of stable speed required before feeding.
+    # Raise this if the flywheel is still dipping when the ball enters.
+    # Lower it if the pre-feed wait feels too long during a match.
+    _SETTLE_LOOPS = 10
 
     def __init__(self, shooter: ShooterSubsystem) -> None:
         super().__init__()
         self._shooter = shooter
+        self._feeding = False
+        self._at_speed_count = 0
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
+        self._feeding = False
+        self._at_speed_count = 0
         self._shooter.set_velocity_rps(get_shooter_rps())
         self._shooter.stop_feeder()
 
     def execute(self) -> None:
+        # Always keep commanding the flywheel so PID stays active during ball load
         self._shooter.set_velocity_rps(get_shooter_rps())
-        self._shooter.run_feeder()
+
+        if not self._feeding:
+            if self._shooter.is_at_speed():
+                self._at_speed_count += 1
+            else:
+                # Reset counter if speed dips before we've latched —
+                # we want stable speed, not a brief crossing of the threshold
+                self._at_speed_count = 0
+
+            if self._at_speed_count >= self._SETTLE_LOOPS:
+                self._feeding = True
+
+        if self._feeding:
+            self._shooter.run_feeder()
+        else:
+            self._shooter.stop_feeder()
 
     def end(self, interrupted: bool) -> None:
+        self._feeding = False
+        self._at_speed_count = 0
         self._shooter.stop_all()
 
     def isFinished(self) -> bool:
@@ -147,10 +185,15 @@ class ResetShooterVelocityCommand(commands2.InstantCommand):
 
 class AutoShootCommand(commands2.Command):
     """
-    Autonomous shoot: spin up and feed for duration, then finish.
-    No speed gate — feeder runs immediately. Uses wpilib.Timer for
-    accurate wall-clock measurement.
+    Autonomous shoot: spin up, wait for stable speed, feed for duration, finish.
+
+    The feed timer only starts once the flywheel has been at speed for
+    SETTLE_LOOPS consecutive loops — so feed_duration_sec is the time the
+    feeder actually runs, not the total command duration.
     """
+
+    # Same settle requirement as ShootCommand
+    _SETTLE_LOOPS = 10
 
     def __init__(
         self,
@@ -163,23 +206,42 @@ class AutoShootCommand(commands2.Command):
         self._explicit_rps = target_rps
         self._feed_duration = feed_duration_sec
         self._timer = wpilib.Timer()
+        self._started_feeding = False
+        self._at_speed_count = 0
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
+        self._started_feeding = False
+        self._at_speed_count = 0
         rps = self._explicit_rps if self._explicit_rps is not None else get_shooter_rps()
         self._shooter.set_velocity_rps(rps)
+        self._shooter.stop_feeder()
         self._timer.reset()
-        self._timer.start()
 
     def execute(self) -> None:
-        # Keep commanding velocity every loop so PID stays active
         rps = self._explicit_rps if self._explicit_rps is not None else get_shooter_rps()
+        # Keep commanding velocity every loop so PID stays active
         self._shooter.set_velocity_rps(rps)
-        self._shooter.run_feeder()
+
+        if not self._started_feeding:
+            if self._shooter.is_at_speed():
+                self._at_speed_count += 1
+            else:
+                self._at_speed_count = 0
+
+            if self._at_speed_count >= self._SETTLE_LOOPS:
+                self._started_feeding = True
+                # Start the duration clock only when feeding actually begins
+                self._timer.start()
+
+        if self._started_feeding:
+            self._shooter.run_feeder()
 
     def end(self, interrupted: bool) -> None:
         self._timer.stop()
+        self._started_feeding = False
+        self._at_speed_count = 0
         self._shooter.stop_all()
 
     def isFinished(self) -> bool:
-        return self._timer.hasElapsed(self._feed_duration)
+        return self._started_feeding and self._timer.hasElapsed(self._feed_duration)

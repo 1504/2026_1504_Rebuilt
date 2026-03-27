@@ -19,6 +19,7 @@ from rev import SparkMax, SparkMaxConfig
 from src.constants import ShooterConstants
 from phoenix6.signals import InvertedValue
 
+
 class ShooterSubsystem(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
@@ -28,54 +29,64 @@ class ShooterSubsystem(commands2.Subsystem):
         self._motor2 = TalonFX(ShooterConstants.kShooterMotor2Id)
 
         cfg1 = TalonFXConfiguration()
-
         cfg1.slot0.k_p = ShooterConstants.kShooterP
         cfg1.slot0.k_i = ShooterConstants.kShooterI
         cfg1.slot0.k_d = ShooterConstants.kShooterD
         cfg1.slot0.k_v = ShooterConstants.kShooterKv
-
-        cfg1.current_limits.supply_current_limit_enable = True
-        cfg1.current_limits.supply_current_limit        = ShooterConstants.kFlywheelCurrentLimit
-        cfg1.current_limits.stator_current_limit_enable = True
-        cfg1.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
-
+        cfg1.current_limits.supply_current_limit_enable  = True
+        cfg1.current_limits.supply_current_limit         = ShooterConstants.kFlywheelCurrentLimit
+        # Sustain limit: after 0.5 s of high draw, drop to 40 A to protect the
+        # motor and avoid browning out the rail while the flywheel recovers.
+        cfg1.current_limits.supply_current_lower_limit   = 40
+        cfg1.current_limits.supply_current_lower_time    = 0.5
+        cfg1.current_limits.stator_current_limit_enable  = True
+        cfg1.current_limits.stator_current_limit         = ShooterConstants.kFlywheelStatorCurrentLimit
         self._motor1.configurator.apply(cfg1)
-        
-        cfg2 = TalonFXConfiguration()
 
+        cfg2 = TalonFXConfiguration()
         cfg2.slot0.k_p = ShooterConstants.kShooterP
         cfg2.slot0.k_i = ShooterConstants.kShooterI
         cfg2.slot0.k_d = ShooterConstants.kShooterD
         cfg2.slot0.k_v = ShooterConstants.kShooterKv
-
-        cfg2.current_limits.supply_current_limit_enable = True
-        cfg2.current_limits.supply_current_limit        = ShooterConstants.kFlywheelCurrentLimit
-        cfg2.current_limits.stator_current_limit_enable = True
-        cfg2.current_limits.stator_current_limit        = ShooterConstants.kFlywheelStatorCurrentLimit
-        cfg2.motor_output.inverted
-        cfg2.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
+        cfg2.current_limits.supply_current_limit_enable  = True
+        cfg2.current_limits.supply_current_limit         = ShooterConstants.kFlywheelCurrentLimit
+        cfg2.current_limits.supply_current_lower_limit   = 40
+        cfg2.current_limits.supply_current_lower_time    = 0.5
+        cfg2.current_limits.stator_current_limit_enable  = True
+        cfg2.current_limits.stator_current_limit         = ShooterConstants.kFlywheelStatorCurrentLimit
+        cfg2.motor_output.inverted                        = InvertedValue.CLOCKWISE_POSITIVE
         self._motor2.configurator.apply(cfg2)
 
         # Reused every loop to avoid GC pressure
         self._velocity_request = VelocityVoltage(0).with_slot(0).with_enable_foc(True)
-        # FIXED: stop_shooter now sends NeutralOut instead of VelocityVoltage(0).
-        # VelocityVoltage(0) keeps the PID active and actively resists being
-        # turned by hand (e.g. during inspection or after disable).  NeutralOut
-        # releases the motor so it coasts freely.
+        # NeutralOut releases the motor so it coasts freely when stopped.
+        # VelocityVoltage(0) would keep the PID active and resist being turned
+        # by hand (e.g. during inspection), so we use NeutralOut instead.
         self._neutral_request  = NeutralOut()
 
         # ── Feeder motor (SparkMax NEO 550) ───────────────────────
-        self._feeder = SparkMax(ShooterConstants.kFeederMotorId, SparkMax.MotorType.kBrushless)
+        # NEO 550 safe continuous limit is ~20 A. The original 60 A limit was
+        # causing large current spikes on ball intake that browned out the
+        # flywheel motors sharing the same power rail.
+        self._feeder   = SparkMax(ShooterConstants.kFeederMotorId,   SparkMax.MotorType.kBrushless)
         self._agitator = SparkMax(ShooterConstants.kAgitatorMotorId, SparkMax.MotorType.kBrushless)
+
         feeder_cfg = SparkMaxConfig()
         feeder_cfg.smartCurrentLimit(ShooterConstants.kFeederCurrentLimit)
+        feeder_cfg.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         self._feeder.configure(
             feeder_cfg,
             rev.ResetMode.kResetSafeParameters,
             rev.PersistMode.kPersistParameters,
         )
+
+        # Agitator gets its own config + current limit so it can be tuned
+        # independently of the feeder without touching the feeder config.
+        agitator_cfg = SparkMaxConfig()
+        agitator_cfg.smartCurrentLimit(ShooterConstants.kAgitatorCurrentLimit)
+        agitator_cfg.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         self._agitator.configure(
-            feeder_cfg,
+            agitator_cfg,
             rev.ResetMode.kResetSafeParameters,
             rev.PersistMode.kPersistParameters,
         )
@@ -89,14 +100,15 @@ class ShooterSubsystem(commands2.Subsystem):
     def periodic(self) -> None:
         m1_vel = self._motor1.get_velocity().value
         m2_vel = self._motor2.get_velocity().value
-
-        SmartDashboard.putNumber("Shooter/Motor1 RPS",     m1_vel)
-        SmartDashboard.putNumber("Shooter/Motor2 RPS",     m2_vel)
-        SmartDashboard.putNumber("Shooter/Target RPS",     self._target_rps)
-        SmartDashboard.putBoolean("Shooter/AtSpeed",       self.is_at_speed())
-        SmartDashboard.putNumber("Shooter/FeederCurrent",  self._feeder.getOutputCurrent())
-        SmartDashboard.putNumber("Shooter/Motor1Current",  self._motor1.get_supply_current().value)
-        SmartDashboard.putNumber("Shooter/Motor2Current",  self._motor2.get_supply_current().value)
+        self._targetVelocity = SmartDashboard.getNumber("Shooter/TargetVelocity", ShooterConstants.kDefaultShooterRps)
+        SmartDashboard.putNumber("Shooter/Motor1 RPS",      m1_vel)
+        SmartDashboard.putNumber("Shooter/Motor2 RPS",      m2_vel)
+        SmartDashboard.putNumber("Shooter/Target RPS",      self._target_rps)
+        SmartDashboard.putBoolean("Shooter/AtSpeed",        self.is_at_speed())
+        SmartDashboard.putNumber("Shooter/FeederCurrent",   self._feeder.getOutputCurrent())
+        SmartDashboard.putNumber("Shooter/AgitatorCurrent", self._agitator.getOutputCurrent())
+        SmartDashboard.putNumber("Shooter/Motor1Current",   self._motor1.get_supply_current().value)
+        SmartDashboard.putNumber("Shooter/Motor2Current",   self._motor2.get_supply_current().value)
 
     # ─────────────────────────────────────────────────────────────
     # FLYWHEEL CONTROL
@@ -131,7 +143,7 @@ class ShooterSubsystem(commands2.Subsystem):
     def run_feeder(self, speed: float | None = None) -> None:
         self._feeder.set(speed if speed is not None else ShooterConstants.kFeederSpeed)
         self._agitator.set(speed if speed is not None else ShooterConstants.kAgitatorSpeed)
-        
+
     def stop_feeder(self) -> None:
         self._feeder.set(0.0)
         self._agitator.set(0.0)
@@ -139,6 +151,10 @@ class ShooterSubsystem(commands2.Subsystem):
     def stop_all(self) -> None:
         self.stop_shooter()
         self.stop_feeder()
+        
+    def run_at_sd_velocity(self) -> None:
+        self.set_velocity_rps(self._targetVelocity)
+        SmartDashboard.putString("Shooter/Status",f"Commanding Velocity: {self._targetVelocity}")
 
     # ─────────────────────────────────────────────────────────────
     # HELPER: interpolate shooter table

@@ -45,9 +45,9 @@ Operator (port 1):
   A                   → spin up flywheel only (while held)
   Left trigger        → intake (while held)
   Left bumper         → reverse intake (while held)
-  X                   → climb up (while held)
-  Y                   → climb down (while held)
-  B                   → climb sequence (level 1 → 2 → 1)
+  X                   → AutoShoot
+  Y                   → Shoot
+  B                   → 
   D-pad Up            → increase shooter velocity by one step
   D-pad Down          → decrease shooter velocity by one step
   D-pad Left          → reset shooter velocity to default
@@ -82,6 +82,8 @@ SINGLE_CONTROLLER_TEST = False
 
 class RobotContainer:
     def __init__(self) -> None:
+        SmartDashboard.putNumber("Shooter/TargetVelocity", ShooterConstants.kDefaultShooterRps)
+        
         # ── Subsystems ────────────────────────────────────────────
         self.drive   = DriveSubsystem()
         self.shooter = ShooterSubsystem()
@@ -145,7 +147,8 @@ class RobotContainer:
             DriveToShootCommand(self.drive, self.vision)
             .andThen(shoot_cmds.ShootCommand(self.shooter))
         )
-        d.y().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
+        d.y().onTrue(shoot_cmds.SpinUpCommand(self.shooter, True))
+        d.y().onFalse(shoot_cmds.SpinUpCommand(self.shooter, False))
         d.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
 
         d.b().whileTrue(intake_cmds.IntakeCommand(self.intake))
@@ -188,8 +191,10 @@ class RobotContainer:
             .andThen(shoot_cmds.ShootCommand(self.shooter))
         )
         op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
-        op.a().whileTrue(shoot_cmds.SpinUpCommand(self.shooter))
-
+        op.a().onTrue(shoot_cmds.SpinUpCommand(self.shooter, True))
+        op.a().onFalse(shoot_cmds.SpinUpCommand(self.shooter, False))
+        op.x().whileTrue(shoot_cmds.AutoShootCommand(self.shooter))
+        op.y().whileTrue(shoot_cmds.ShootCommand(self.shooter))
         # op.b().onTrue(
         #     climb_cmds.ClimbLevel1(self.climber)
         #     .andThen(climb_cmds.ClimbLevel2(self.climber))

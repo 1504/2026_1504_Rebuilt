@@ -82,7 +82,6 @@ SINGLE_CONTROLLER_TEST = False
 
 class RobotContainer:
     def __init__(self) -> None:
-        SmartDashboard.putNumber("Shooter/TargetVelocity", ShooterConstants.kDefaultShooterRps)
         
         # ── Subsystems ────────────────────────────────────────────
         self.drive   = DriveSubsystem()
@@ -122,6 +121,11 @@ class RobotContainer:
         SmartDashboard.putNumber(
             "Shooter/TargetRPS_Adjusted", ShooterConstants.kDefaultShooterRps
         )
+        SmartDashboard.putNumber(
+            "Shooter/TargetVelocity", ShooterConstants.kDefaultShooterRps
+            )
+        SmartDashboard.putNumber(
+            "Shooter/TargetFeeder%", ShooterConstants.kFeederSpeed)
 
         # ── Teleop bindings ───────────────────────────────────────
         self.configure_teleop_bindings()
@@ -170,8 +174,6 @@ class RobotContainer:
         d.rightBumper().whileTrue(drive_cmds.SetXCommand(self.drive))
         d.start().onTrue(drive_cmds.ResetHeadingCommand(self.drive))
         d.back().whileTrue(drive_cmds.VisionSnapCommand(self.drive, self.vision))
-        op.start().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
-        op.back().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
 
         d.rightTrigger(0.5).whileTrue(
             drive_cmds.RobotRelativeDriveCommand(
@@ -190,27 +192,36 @@ class RobotContainer:
             DriveToShootCommand(self.drive, self.vision)
             .andThen(shoot_cmds.ShootCommand(self.shooter))
         )
-        op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
-        op.a().onTrue(shoot_cmds.SpinUpCommand(self.shooter, True))
-        op.a().onFalse(shoot_cmds.SpinUpCommand(self.shooter, False))
-        op.x().whileTrue(shoot_cmds.AutoShootCommand(self.shooter))
+        
+        # Drawer Commands
+        op.start().whileTrue(drawer_cmds.OutCommand(self.intake_Drawer))
+        op.back().whileTrue(drawer_cmds.InCommand(self.intake_Drawer))
+        
+        # Shoot!
         op.y().whileTrue(shoot_cmds.ShootCommand(self.shooter))
+
+        # Intake!
+        op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
+        op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
+        
+        # D-pad: operator adjusts shooter velocity live during match
+        op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
+        op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
+        op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
+        
         # op.b().onTrue(
         #     climb_cmds.ClimbLevel1(self.climber)
         #     .andThen(climb_cmds.ClimbLevel2(self.climber))
         #     .andThen(climb_cmds.ClimbLevel1(self.climber))
         # )
 
-        op.leftTrigger(0.5).whileTrue(intake_cmds.IntakeCommand(self.intake))
-        op.leftBumper().whileTrue(intake_cmds.ReverseIntakeCommand(self.intake))
-
         # op.x().whileTrue(climb_cmds.ClimbUpCommand(self.climber))
         # op.y().whileTrue(climb_cmds.ClimbDownCommand(self.climber))
-
-        # D-pad: operator adjusts shooter velocity live during match
-        op.povUp().onTrue(shoot_cmds.IncreaseShooterVelocityCommand(self.shooter))
-        op.povDown().onTrue(shoot_cmds.DecreaseShooterVelocityCommand(self.shooter))
-        op.povLeft().onTrue(shoot_cmds.ResetShooterVelocityCommand(self.shooter))
+        
+        #! Disabled in favor of AutoShoot command
+        # op.rightBumper().whileTrue(shoot_cmds.FeedCommand(self.shooter))
+        # op.a().onTrue(shoot_cmds.SpinUpCommand(self.shooter, True))
+        # op.a().onFalse(shoot_cmds.SpinUpCommand(self.shooter, False))
 
     def configure_teleop(self) -> None:
         """Called by teleopInit — clears stale slew state so first input is smooth."""

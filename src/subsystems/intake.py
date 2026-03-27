@@ -7,7 +7,6 @@ Both motors use coast idle mode so the intake spins freely when stopped.
 
 import commands2
 import rev
-import wpilib
 from wpilib import SmartDashboard
 from rev import SparkFlex, SparkFlexConfig
 

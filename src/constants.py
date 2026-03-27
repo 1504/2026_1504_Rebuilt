@@ -127,8 +127,8 @@ class ShooterConstants:
     kShooterKv = 0.12
 
     kVelocityToleranceRps       = 20.0
-    kFeederSpeed                = -0.6
-    kAgitatorSpeed              = -0.6
+    kFeederSpeed                = -0.24
+    kAgitatorSpeed              = -0.5
 
     # ── Current limits ────────────────────────────────────────────
     # NEO 550 (feeder + agitator): safe continuous limit is ~20 A.
@@ -146,8 +146,8 @@ class ShooterConstants:
 
     # ── Live velocity tuning via D-pad ────────────────────────────
     # D-pad Up/Down steps through RPS at practice; Left resets to default.
-    kDefaultShooterRps = 40.0   # what D-pad Left resets to
-    kShooterRpsStep    = 2.0    # how much each D-pad press changes velocity
+    kDefaultShooterRps = 42.63  # what D-pad Left resets to
+    kShooterRpsStep    = 0.5    # how much each D-pad press changes velocity
     kShooterMinRps     = 10.0   # floor
     kShooterMaxRps     = 80.0   # ceiling
 
@@ -285,16 +285,16 @@ class IntakeDrawerConstants:
 
     # Tune kRightSpeedScale (0.0–1.0) to balance the weaker right side.
     # Start at 0.7 and increase until it stops binding.
-    kBaseSpeed       = 0.05
-    kRightSpeedScale = 0.33 # < - - tune
+    kBaseSpeed       = 0.15
+    kRightSpeedScale = 1 # < - - tune
 
     k_config = SparkMaxConfig()
     k_config.inverted(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_config.smartCurrentLimit(10)
+    k_config.smartCurrentLimit(20)
 
     # Remove the follow config entirely — we're driving both motors directly
     k_right_config = SparkMaxConfig()
-    k_right_config.inverted(False)  # opposite direction from left
+    k_right_config.inverted(True)  # opposite direction from left
     k_right_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_right_config.smartCurrentLimit(10)
+    k_right_config.smartCurrentLimit(20)

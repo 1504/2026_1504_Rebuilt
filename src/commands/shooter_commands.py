@@ -18,14 +18,6 @@ _current_target_rps: list[float] = [ShooterConstants.kDefaultShooterRps]
 def get_shooter_rps() -> float:
     return _current_target_rps[0]
 
-
-def set_shooter_rps(rps: float) -> None:
-    _current_target_rps[0] = max(
-        ShooterConstants.kShooterMinRps,
-        min(ShooterConstants.kShooterMaxRps, rps),
-    )
-
-
 def reset_shooter_rps() -> None:
     _current_target_rps[0] = ShooterConstants.kDefaultShooterRps
 
@@ -40,18 +32,15 @@ class SpinUpCommand(commands2.Command):
         self.addRequirements(shooter)
 
     def initialize(self) -> None:
-        SmartDashboard.putString("SpinCommandState", "Inited")
         self._shooter.set_velocity_rps(get_shooter_rps())
 
     def execute(self) -> None:
         if self._start:
             # Re-apply each loop so live adjustments take effect immediately
             # self._shooter.set_velocity_rps(get_shooter_rps())
-            self._shooter.run_at_sd_velocity()
-            SmartDashboard.putString("SpinCommandState", "Running")
+            self._shooter.shoot_at_sd_velocity()
         else:
             self._shooter.stop_shooter()
-            SmartDashboard.putString("SpinCommandState", "Stopped")
 
     def end(self, interrupted: bool) -> None:
         pass
@@ -108,7 +97,7 @@ class ShootCommand(commands2.Command):
 
     def execute(self) -> None:
         # Always keep commanding the flywheel so PID stays active during ball load
-        self._shooter.set_velocity_rps(get_shooter_rps())
+        self._shooter.set_velocity_rps(self._shooter.get_sd_rps())
 
         if not self._feeding:
             if self._shooter.is_at_speed():
@@ -122,7 +111,7 @@ class ShootCommand(commands2.Command):
                 self._feeding = True
 
         if self._feeding:
-            self._shooter.run_feeder()
+            self._shooter.run_feeder(self._shooter.get_sd_feeder())
         else:
             self._shooter.stop_feeder()
 
@@ -145,10 +134,7 @@ class IncreaseShooterVelocityCommand(commands2.InstantCommand):
         super().__init__(lambda: self._adjust(shooter))
 
     def _adjust(self, shooter: ShooterSubsystem) -> None:
-        set_shooter_rps(get_shooter_rps() + ShooterConstants.kShooterRpsStep)
-        rps = get_shooter_rps()
-        SmartDashboard.putNumber("Shooter/TargetRPS_Adjusted", rps)
-        wpilib.reportWarning(f"[Shooter] velocity → {rps:.1f} RPS", printTrace=False)
+        shooter.increase_target_velocity()
 
 
 class DecreaseShooterVelocityCommand(commands2.InstantCommand):
@@ -161,10 +147,7 @@ class DecreaseShooterVelocityCommand(commands2.InstantCommand):
         super().__init__(lambda: self._adjust(shooter))
 
     def _adjust(self, shooter: ShooterSubsystem) -> None:
-        set_shooter_rps(get_shooter_rps() - ShooterConstants.kShooterRpsStep)
-        rps = get_shooter_rps()
-        SmartDashboard.putNumber("Shooter/TargetRPS_Adjusted", rps)
-        wpilib.reportWarning(f"[Shooter] velocity → {rps:.1f} RPS", printTrace=False)
+        shooter.decrease_target_velocity()
 
 
 class ResetShooterVelocityCommand(commands2.InstantCommand):
@@ -177,12 +160,11 @@ class ResetShooterVelocityCommand(commands2.InstantCommand):
         super().__init__(lambda: self._reset(shooter))
 
     def _reset(self, shooter: ShooterSubsystem) -> None:
-        reset_shooter_rps()
-        rps = get_shooter_rps()
-        SmartDashboard.putNumber("Shooter/TargetRPS_Adjusted", rps)
-        wpilib.reportWarning(f"[Shooter] velocity reset → {rps:.1f} RPS", printTrace=False)
+        shooter.reset_target_velocity()
+        
 
 
+# This is redundant, basically a reimplimentation of ShooterCommand above
 class AutoShootCommand(commands2.Command):
     """
     Autonomous shoot: spin up, wait for stable speed, feed for duration, finish.

@@ -27,6 +27,10 @@ class ShooterSubsystem(commands2.Subsystem):
         # ── Flywheel motors (TalonFX / Kraken or Falcon) ──────────
         self._motor1 = TalonFX(ShooterConstants.kShooterMotor1Id)
         self._motor2 = TalonFX(ShooterConstants.kShooterMotor2Id)
+        
+        # Set globals to read this once per loop
+        self._motor1CurrentVelocity = 0.0
+        self._motor2CurrentVelocity = 0.0
 
         cfg1 = TalonFXConfiguration()
         cfg1.slot0.k_p = ShooterConstants.kShooterP
@@ -69,24 +73,12 @@ class ShooterSubsystem(commands2.Subsystem):
         # causing large current spikes on ball intake that browned out the
         # flywheel motors sharing the same power rail.
         self._feeder   = SparkMax(ShooterConstants.kFeederMotorId,   SparkMax.MotorType.kBrushless)
-        self._agitator = SparkMax(ShooterConstants.kAgitatorMotorId, SparkMax.MotorType.kBrushless)
 
         feeder_cfg = SparkMaxConfig()
         feeder_cfg.smartCurrentLimit(ShooterConstants.kFeederCurrentLimit)
         feeder_cfg.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         self._feeder.configure(
             feeder_cfg,
-            rev.ResetMode.kResetSafeParameters,
-            rev.PersistMode.kPersistParameters,
-        )
-
-        # Agitator gets its own config + current limit so it can be tuned
-        # independently of the feeder without touching the feeder config.
-        agitator_cfg = SparkMaxConfig()
-        agitator_cfg.smartCurrentLimit(ShooterConstants.kAgitatorCurrentLimit)
-        agitator_cfg.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
-        self._agitator.configure(
-            agitator_cfg,
             rev.ResetMode.kResetSafeParameters,
             rev.PersistMode.kPersistParameters,
         )
@@ -98,17 +90,22 @@ class ShooterSubsystem(commands2.Subsystem):
     # PERIODIC
     # ─────────────────────────────────────────────────────────────
     def periodic(self) -> None:
-        m1_vel = self._motor1.get_velocity().value
-        m2_vel = self._motor2.get_velocity().value
+        self._motor1CurrentVelocity = self._motor1.get_velocity().value
+        self._motor2CurrentVelocity = self._motor2.get_velocity().value
+        
+        # Read in values set from smart dashboard
         self._targetVelocity = SmartDashboard.getNumber("Shooter/TargetVelocity", ShooterConstants.kDefaultShooterRps)
-        SmartDashboard.putNumber("Shooter/Motor1 RPS",      m1_vel)
-        SmartDashboard.putNumber("Shooter/Motor2 RPS",      m2_vel)
-        SmartDashboard.putNumber("Shooter/Target RPS",      self._target_rps)
+        self._feederPercent = SmartDashboard.getNumber("Shooter/TargetFeeder%", ShooterConstants.kFeederSpeed)
+        
+        SmartDashboard.putNumber("Shooter/Velocities/Motor1 RPS",      self._motor1CurrentVelocity)
+        SmartDashboard.putNumber("Shooter/Velocities/Motor2 RPS",      self._motor2CurrentVelocity)
+            
+        SmartDashboard.putNumber("Shooter/Commanded RPS",   self._target_rps)
         SmartDashboard.putBoolean("Shooter/AtSpeed",        self.is_at_speed())
-        SmartDashboard.putNumber("Shooter/FeederCurrent",   self._feeder.getOutputCurrent())
-        SmartDashboard.putNumber("Shooter/AgitatorCurrent", self._agitator.getOutputCurrent())
-        SmartDashboard.putNumber("Shooter/Motor1Current",   self._motor1.get_supply_current().value)
-        SmartDashboard.putNumber("Shooter/Motor2Current",   self._motor2.get_supply_current().value)
+        
+        SmartDashboard.putNumber("Shooter/Currents/FeederCurrent",   self._feeder.getOutputCurrent())
+        SmartDashboard.putNumber("Shooter/Currents/Motor1Current",   self._motor1.get_supply_current().value)
+        SmartDashboard.putNumber("Shooter/Currents/Motor2Current",   self._motor2.get_supply_current().value)
 
     # ─────────────────────────────────────────────────────────────
     # FLYWHEEL CONTROL
@@ -130,31 +127,52 @@ class ShooterSubsystem(commands2.Subsystem):
     def is_at_speed(self) -> bool:
         if self._target_rps == 0.0:
             return False
-        m1_err = abs(self._motor1.get_velocity().value - self._target_rps)
-        m2_err = abs(self._motor2.get_velocity().value - self._target_rps)
+        m1_err = abs(self._motor1CurrentVelocity - self._target_rps)
+        m2_err = abs(self._motor2CurrentVelocity - self._target_rps)
         return (
             m1_err < ShooterConstants.kVelocityToleranceRps
             and m2_err < ShooterConstants.kVelocityToleranceRps
         )
 
+    # Increase shooter RPS
+    def increase_target_velocity(self) -> None:
+        self._targetVelocity = min(self._targetVelocity + ShooterConstants.kShooterRpsStep, ShooterConstants.kShooterMaxRps)
+        SmartDashboard.putNumber("Shooter/TargetVelocity", self._targetVelocity)
+    
+    # Decreases shooter RPS
+    def decrease_target_velocity(self) -> None:
+        self._targetVelocity = max(self._targetVelocity - ShooterConstants.kShooterRpsStep, ShooterConstants.kShooterMinRps)
+        SmartDashboard.putNumber("Shooter/TargetVelocity", self._targetVelocity)
+        
+    # Reset shooter RPS to default
+    def reset_target_velocity(self) -> None:
+        self._targetVelocity = ShooterConstants.kDefaultShooterRps
+        SmartDashboard.putNumber("Shooter/TargetVelocity", self._targetVelocity)
+
     # ─────────────────────────────────────────────────────────────
     # FEEDER CONTROL
     # ─────────────────────────────────────────────────────────────
     def run_feeder(self, speed: float | None = None) -> None:
-        self._feeder.set(speed if speed is not None else ShooterConstants.kFeederSpeed)
-        self._agitator.set(speed if speed is not None else ShooterConstants.kAgitatorSpeed)
+        speed = speed if speed is not None else ShooterConstants.kFeederSpeed
+        SmartDashboard.putNumber("Shooter/Commanded Feeder Speed", speed)
+        self._feeder.set(speed)
 
     def stop_feeder(self) -> None:
         self._feeder.set(0.0)
-        self._agitator.set(0.0)
 
     def stop_all(self) -> None:
         self.stop_shooter()
         self.stop_feeder()
         
-    def run_at_sd_velocity(self) -> None:
-        self.set_velocity_rps(self._targetVelocity)
-        SmartDashboard.putString("Shooter/Status",f"Commanding Velocity: {self._targetVelocity}")
+    def shoot_at_sd_velocity(self) -> None:
+        self.set_velocity_rps(self.get_sd_rps())
+
+    # return the value that we're reading from SmartDashboard
+    def get_sd_rps(self) -> float:
+        return self._targetVelocity
+    
+    def get_sd_feeder(self) -> float:
+        return self._feederPercent
 
     # ─────────────────────────────────────────────────────────────
     # HELPER: interpolate shooter table

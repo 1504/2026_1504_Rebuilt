@@ -256,8 +256,4 @@ class RobotContainer:
     
     def auton_run(self) -> None:
         """Called from autonomousInit to reset any necessary state."""
-        # Reset shooter RPS to default at start of each auto
-    
-    def get_autonomous_command(self) -> commands2.Command | None:
-        selected = self.auto_chooser.getSelected()
-        return self.auto_builder.build_with_shoot(selected)        
+        # Reset shooter RPS to default at start of each auto 

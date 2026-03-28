@@ -49,7 +49,7 @@ class PPAutoBuilder:
                 AutoShootCommand(
                     self._shooter,
                     target_rps=ShootingConstants.kTargetRps,
-                    feed_duration_sec=1.0,
+                    feed_duration_sec=20.0,
                 )
             ),
         )
@@ -84,3 +84,19 @@ class PPAutoBuilder:
         except Exception as e:
             print(f"[AutoBuilder] Could not load auto '{name}': {e}")
             return commands2.InstantCommand()
+
+    def build_with_shoot(self, name: str | None) -> commands2.Command:
+    #"""Build a PathPlanner auto and chain a shoot command at the end."""
+        if not name:
+            return commands2.InstantCommand()
+        try:
+            return PathPlannerAuto(name).andThen(
+            AutoShootCommand(
+                self._shooter,
+                target_rps=ShootingConstants.kTargetRps,
+                feed_duration_sec=20.0,
+            )
+        )
+        except Exception as e:
+            print(f"[AutoBuilder] Could not load auto '{name}': {e}")
+        return commands2.InstantCommand()

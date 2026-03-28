@@ -68,6 +68,9 @@ from src.auto.auto_builder import PPAutoBuilder
 from src.subsystems.drawer import drawerSubsystem
 # from src.subsystems.intake_Drawer import drawerSubsystem
 
+from pathplannerlib.auto import PathPlannerAuto
+from src.commands.shooter_commands import AutoShootCommand
+
 import src.commands.drive_commands as drive_cmds
 import src.commands.shooter_commands as shoot_cmds
 import src.commands.intake_commands as intake_cmds
@@ -243,9 +246,18 @@ class RobotContainer:
         self.auto_chooser.addOption("R3",       "Red Three")
         self.auto_chooser.addOption("Test",     "TestAuto")
         self.auto_chooser.addOption("!",        "New New Path")
+        self.auto_chooser.addOption("Shooting",  "New Auto")
 
         SmartDashboard.putData("Auto Mode", self.auto_chooser)
 
     def get_autonomous_command(self) -> commands2.Command | None:
         selected = self.auto_chooser.getSelected()
-        return self.auto_builder.build(selected)
+        return self.auto_builder.build(selected)  
+    
+    def auton_run(self) -> None:
+        """Called from autonomousInit to reset any necessary state."""
+        # Reset shooter RPS to default at start of each auto
+    
+    def get_autonomous_command(self) -> commands2.Command | None:
+        selected = self.auto_chooser.getSelected()
+        return self.auto_builder.build_with_shoot(selected)        

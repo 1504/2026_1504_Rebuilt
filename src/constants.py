@@ -33,7 +33,7 @@ class DriveConstants:
     kMaxAutoSpeedMps     = 4.8
     kMaxAngularSpeedRps  = 2 * math.pi
 
-    kMagnitudeSlewRate   = 3.0
+    kMagnitudeSlewRate   = 2.4
     kRotationalSlewRate  = 2.0
     kSlowModeMultiplier  = 0.3
 
